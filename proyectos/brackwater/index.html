@@ -1,0 +1,1566 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}</style></head><body>
+<title>The Brackwater Ledger</title>
+
+<style>
+/* ============================================================
+   THE BRACKWATER LEDGER
+   A columnar accounting pad kept by a man with a horse problem.
+   ============================================================ */
+
+:root{
+  --paper:      #E3E8DC;
+  --paper-2:    #D9E0D1;
+  --paper-3:    #CFD7C6;
+  --ink:        #1B231D;
+  --ink-2:      #4A5449;
+  --ink-3:      #6D7869;
+  --rule:       #A6382E;
+  --lantern:    #8F631B;
+  --cold:       #176A73;
+  --cold-soft:  #9FC2C2;
+  --edge:       #BCC5B4;
+  --tape:       #D9CFA8;
+  --grain:      .055;
+  --shadow:     0 1px 0 rgba(27,35,29,.06), 0 12px 28px -18px rgba(27,35,29,.5);
+
+  --f-plaque: "Copperplate", "Copperplate Gothic Light", "Engravers MT", "Optima", "Gill Sans", "Gill Sans MT", ui-sans-serif, sans-serif;
+  --f-body:   "Iowan Old Style", "Charter", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --f-data:   "American Typewriter", "Courier New", ui-monospace, Menlo, monospace;
+  --f-hand:   "Bradley Hand", "Segoe Script", "Snell Roundhand", "Brush Script MT", cursive;
+
+  --rail: 8.5rem;
+  --gut: 2rem;
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --paper:     #101514;
+    --paper-2:   #171E1D;
+    --paper-3:   #1D2625;
+    --ink:       #DCE3D6;
+    --ink-2:     #9AA79D;
+    --ink-3:     #77857B;
+    --rule:      #A2453A;
+    --lantern:   #E2A94E;
+    --cold:      #5FD3D8;
+    --cold-soft: #2C4A4E;
+    --edge:      #2B3634;
+    --tape:      #4A4331;
+    --grain:     .085;
+    --shadow:    0 1px 0 rgba(0,0,0,.4), 0 18px 34px -20px #000;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#101514; --paper-2:#171E1D; --paper-3:#1D2625;
+  --ink:#DCE3D6; --ink-2:#9AA79D; --ink-3:#77857B;
+  --rule:#A2453A; --lantern:#E2A94E; --cold:#5FD3D8; --cold-soft:#2C4A4E;
+  --edge:#2B3634; --tape:#4A4331; --grain:.085;
+  --shadow:0 1px 0 rgba(0,0,0,.4), 0 18px 34px -20px #000;
+}
+:root[data-theme="light"]{
+  --paper:#E3E8DC; --paper-2:#D9E0D1; --paper-3:#CFD7C6;
+  --ink:#1B231D; --ink-2:#4A5449; --ink-3:#6D7869;
+  --rule:#A6382E; --lantern:#8F631B; --cold:#176A73; --cold-soft:#9FC2C2;
+  --edge:#BCC5B4; --tape:#D9CFA8; --grain:.055;
+  --shadow:0 1px 0 rgba(27,35,29,.06), 0 12px 28px -18px rgba(27,35,29,.5);
+}
+
+/* ---------- page ---------- */
+
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--f-body);
+  font-size:clamp(1rem,.95rem + .25vw,1.115rem);
+  line-height:1.62;
+  -webkit-font-smoothing:antialiased;
+  position:relative;
+}
+body::before{
+  content:"";
+  position:fixed; inset:0; z-index:60;
+  pointer-events:none;
+  opacity:var(--grain);
+  background-image:var(--grain-src,none);
+  background-size:180px 180px;
+  mix-blend-mode:multiply;
+}
+:root[data-theme="dark"] body::before,
+body:has(#root-dark) ::before{ }
+@media (prefers-color-scheme: dark){
+  body::before{ mix-blend-mode:screen; }
+}
+:root[data-theme="dark"] body::before{ mix-blend-mode:screen; }
+:root[data-theme="light"] body::before{ mix-blend-mode:multiply; }
+
+.sheet{
+  max-width:62rem;
+  margin-inline:auto;
+  padding:0 clamp(1rem,4vw,3rem) 6rem;
+}
+
+/* ---------- shared type roles ---------- */
+
+.plaque{
+  font-family:var(--f-plaque);
+  text-transform:uppercase;
+  letter-spacing:.16em;
+  font-weight:600;
+}
+.datum{
+  font-family:var(--f-data);
+  font-variant-numeric:tabular-nums;
+  letter-spacing:.02em;
+}
+.hand{
+  font-family:var(--f-hand);
+  color:var(--rule);
+  letter-spacing:.01em;
+}
+h1,h2,h3{ text-wrap:balance; margin:0; }
+p{ margin:0; }
+a{ color:inherit; }
+
+:where(a,button,summary):focus-visible{
+  outline:2px solid var(--cold);
+  outline-offset:3px;
+  border-radius:1px;
+}
+
+/* ============================================================
+   COVER
+   ============================================================ */
+
+.cover{
+  padding-block:clamp(3rem,9vh,6rem) clamp(3rem,7vh,5rem);
+  border-bottom:1px solid var(--edge);
+}
+.cover-stamp{
+  display:flex; align-items:baseline; gap:.85rem;
+  font-family:var(--f-data);
+  font-size:.7rem; letter-spacing:.18em; text-transform:uppercase;
+  color:var(--ink-3);
+  margin-bottom:2.6rem;
+}
+.cover-stamp .bar{ flex:1; height:1px; background:var(--rule); opacity:.5; }
+
+.cover h1{
+  font-family:var(--f-plaque);
+  text-transform:uppercase;
+  font-size:clamp(2.1rem,1rem + 5.4vw,4.6rem);
+  line-height:.98;
+  letter-spacing:.02em;
+  font-weight:600;
+  margin-bottom:1.4rem;
+}
+.cover h1 .qual{
+  display:block;
+  font-size:clamp(.78rem,.6rem + .7vw,1.05rem);
+  letter-spacing:.3em;
+  color:var(--rule);
+  margin-bottom:1rem;
+}
+.cover .dek{
+  max-width:34rem;
+  color:var(--ink-2);
+  font-size:1.06em;
+}
+
+.docket{
+  margin-top:3rem;
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(11rem,1fr));
+  border-top:1px solid var(--edge);
+}
+.docket div{
+  padding:.9rem 1rem .9rem 0;
+  border-bottom:1px solid var(--edge);
+}
+.docket dt,.docket .k{
+  font-family:var(--f-data);
+  font-size:.62rem; letter-spacing:.2em; text-transform:uppercase;
+  color:var(--ink-3);
+  display:block; margin-bottom:.3rem;
+}
+.docket .v{
+  font-family:var(--f-data);
+  font-size:.92rem;
+  font-variant-numeric:tabular-nums;
+}
+.docket .v em{ font-style:normal; color:var(--rule); }
+
+.contents{
+  margin-top:2.4rem;
+  display:flex; flex-wrap:wrap; gap:.35rem 1.4rem;
+  font-family:var(--f-plaque);
+  text-transform:uppercase; letter-spacing:.14em;
+  font-size:.72rem;
+}
+.contents a{
+  text-decoration:none;
+  border-bottom:1px solid var(--edge);
+  padding-bottom:2px;
+  transition:border-color .18s, color .18s;
+}
+.contents a:hover{ border-color:var(--rule); color:var(--rule); }
+.contents .num{ color:var(--rule); margin-right:.45em; }
+
+/* ============================================================
+   SECTIONS
+   ============================================================ */
+
+.section{ padding-block:clamp(3rem,7vh,5rem) 0; }
+.section-head{
+  display:flex; align-items:center; gap:1rem;
+  margin-bottom:1.8rem;
+}
+.section-head h2{
+  font-family:var(--f-plaque);
+  text-transform:uppercase;
+  letter-spacing:.18em;
+  font-size:clamp(.9rem,.8rem + .3vw,1.06rem);
+  white-space:nowrap;
+}
+.section-head .roman{
+  font-family:var(--f-data);
+  color:var(--rule);
+  font-size:.78rem;
+  letter-spacing:.14em;
+}
+.section-head .bar{ flex:1; height:1px; background:var(--edge); }
+
+.prose{ max-width:36rem; display:flex; flex-direction:column; gap:1.15rem; }
+.prose .lede{
+  font-size:1.16em;
+  line-height:1.5;
+}
+.prose .lede::first-letter{
+  font-family:var(--f-plaque);
+  font-size:3.1em;
+  line-height:.8;
+  float:left;
+  padding:.06em .1em 0 0;
+  color:var(--rule);
+}
+
+/* ============================================================
+   PLATES  (the pictures)
+   ============================================================ */
+
+.plate{
+  margin-block:2.6rem;
+  background:var(--paper-2);
+  border:1px solid var(--edge);
+  box-shadow:var(--shadow);
+  position:relative;
+}
+.plate-head{
+  display:flex; align-items:baseline; justify-content:space-between;
+  gap:1rem; flex-wrap:wrap;
+  padding:.7rem 1rem;
+  border-bottom:1px solid var(--edge);
+  font-family:var(--f-data);
+  font-size:.66rem; letter-spacing:.17em; text-transform:uppercase;
+}
+.plate-head .no{ color:var(--rule); }
+.plate-head .meta{ color:var(--ink-3); }
+.plate-body{ padding:1.1rem; }
+.plate-body.flush{ padding:0; }
+.plate figcaption{
+  padding:.8rem 1rem 1rem;
+  border-top:1px dashed var(--edge);
+  color:var(--ink-2);
+  font-size:.9rem;
+  line-height:1.5;
+  max-width:44rem;
+}
+.plate figcaption b{ color:var(--ink); font-weight:600; }
+.plate svg{ display:block; width:100%; height:auto; }
+.plate canvas{ display:block; width:100%; height:auto; }
+
+/* ============================================================
+   THE LEDGER
+   ============================================================ */
+
+.ledger{
+  position:relative;
+  margin-top:1rem;
+  background-image:linear-gradient(to right,transparent calc(var(--rail) - 1px),var(--rule) calc(var(--rail) - 1px),var(--rule) var(--rail),transparent var(--rail));
+  background-repeat:no-repeat;
+  background-size:100% 100%;
+}
+.entry{
+  display:grid;
+  grid-template-columns:var(--rail) minmax(0,1fr);
+  column-gap:var(--gut);
+  padding-block:1.9rem;
+  border-bottom:1px solid var(--edge);
+}
+.entry:last-child{ border-bottom:0; }
+
+.entry-rail{
+  padding-right:1.1rem;
+  text-align:right;
+  display:flex; flex-direction:column; align-items:flex-end; gap:.35rem;
+}
+.entry-no{
+  font-family:var(--f-data);
+  font-size:1.3rem;
+  font-variant-numeric:tabular-nums;
+  line-height:1;
+  color:var(--ink);
+}
+.entry-no span{ font-size:.6em; color:var(--ink-3); }
+.entry-date{
+  font-family:var(--f-data);
+  font-size:.66rem; letter-spacing:.12em; text-transform:uppercase;
+  color:var(--ink-2);
+}
+.entry-time{
+  font-family:var(--f-data);
+  font-size:.66rem; letter-spacing:.12em;
+  color:var(--rule);
+}
+.entry-rail .hoofmark{
+  width:15px; height:16px; margin-top:.4rem;
+  fill:var(--ink-3); opacity:.55;
+}
+
+.entry-body{ display:flex; flex-direction:column; gap:.95rem; min-width:0; }
+.entry-body h3{
+  font-family:var(--f-plaque);
+  text-transform:uppercase;
+  letter-spacing:.13em;
+  font-size:.84rem;
+  color:var(--ink);
+}
+.entry-body p{ max-width:38rem; }
+
+.strip{
+  display:flex; flex-wrap:wrap; gap:0;
+  border:1px solid var(--edge);
+  background:var(--paper-2);
+  margin-top:.3rem;
+  max-width:38rem;
+}
+.strip div{
+  flex:1 1 6.5rem;
+  padding:.5rem .7rem;
+  border-right:1px solid var(--edge);
+}
+.strip div:last-child{ border-right:0; }
+.strip .k{
+  display:block;
+  font-family:var(--f-data);
+  font-size:.56rem; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--ink-3);
+  margin-bottom:.15rem;
+  white-space:nowrap;
+}
+.strip .v{
+  font-family:var(--f-data);
+  font-size:.9rem;
+  font-variant-numeric:tabular-nums;
+  color:var(--cold);
+}
+.strip .v.warm{ color:var(--lantern); }
+.strip .v.flat{ color:var(--ink-2); }
+
+.margin-note{
+  font-family:var(--f-hand);
+  font-size:1.02rem;
+  line-height:1.35;
+  color:var(--rule);
+  border-left:2px solid var(--rule);
+  padding-left:.8rem;
+  max-width:26rem;
+  transform:rotate(-.35deg);
+}
+
+/* ============================================================
+   SUBJECT CARD
+   ============================================================ */
+
+.subject{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);
+  gap:1.6rem;
+  align-items:start;
+  margin-top:.6rem;
+}
+.record{
+  border:1px solid var(--edge);
+  background:var(--paper-2);
+  box-shadow:var(--shadow);
+}
+.record h3{
+  font-family:var(--f-plaque);
+  text-transform:uppercase; letter-spacing:.18em;
+  font-size:.72rem;
+  padding:.7rem 1rem;
+  border-bottom:1px solid var(--edge);
+  color:var(--ink-2);
+}
+.record dl{ margin:0; }
+.record .row{
+  display:grid;
+  grid-template-columns:8.5rem minmax(0,1fr);
+  gap:.6rem;
+  padding:.62rem 1rem;
+  border-bottom:1px solid var(--edge);
+}
+.record .row:last-child{ border-bottom:0; }
+.record dt{
+  font-family:var(--f-data);
+  font-size:.6rem; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--ink-3);
+  padding-top:.25em;
+}
+.record dd{ margin:0; font-size:.96rem; line-height:1.45; }
+.record dd .q{ color:var(--rule); font-family:var(--f-hand); }
+
+/* ============================================================
+   TERMS  (taped sheet)
+   ============================================================ */
+
+.terms-wrap{ padding-block:2.2rem 1rem; display:flex; justify-content:center; }
+.terms{
+  position:relative;
+  background:var(--paper-2);
+  border:1px solid var(--edge);
+  box-shadow:var(--shadow);
+  padding:2.6rem 2rem 2rem;
+  max-width:34rem;
+  width:100%;
+  transform:rotate(-.6deg);
+}
+.terms::before,.terms::after{
+  content:"";
+  position:absolute; top:-.85rem;
+  width:5.5rem; height:1.7rem;
+  background:var(--tape);
+  opacity:.85;
+  box-shadow:0 1px 3px rgba(0,0,0,.14);
+}
+.terms::before{ left:1.4rem; transform:rotate(-4deg); }
+.terms::after{ right:1.4rem; transform:rotate(3deg); }
+.terms h3{
+  font-family:var(--f-plaque);
+  text-transform:uppercase; letter-spacing:.2em;
+  font-size:.78rem;
+  text-align:center;
+  margin-bottom:.35rem;
+}
+.terms .sub{
+  text-align:center;
+  font-family:var(--f-data);
+  font-size:.6rem; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--ink-3);
+  margin-bottom:1.4rem;
+}
+.terms ol{
+  margin:0; padding:0; list-style:none;
+  display:flex; flex-direction:column; gap:.85rem;
+  counter-reset:clause;
+}
+.terms li{
+  counter-increment:clause;
+  display:grid; grid-template-columns:1.9rem 1fr; gap:.4rem;
+  font-size:.97rem; line-height:1.5;
+}
+.terms li::before{
+  content:counter(clause) ".";
+  font-family:var(--f-data);
+  color:var(--ink-3);
+  font-size:.82rem;
+  padding-top:.2em;
+}
+.terms li.struck .clause{ color:var(--ink-3); }
+.terms li.struck .clause em{
+  font-style:normal;
+  position:relative;
+  display:inline;
+  background-image:linear-gradient(var(--rule),var(--rule));
+  background-size:100% 2px;
+  background-position:0 58%;
+  background-repeat:no-repeat;
+}
+.terms .amend{
+  display:block;
+  font-family:var(--f-hand);
+  color:var(--rule);
+  font-size:1.1rem;
+  line-height:1.3;
+  margin-top:.45rem;
+  transform:rotate(-1.4deg);
+  transform-origin:left center;
+}
+.terms .sig{
+  margin-top:1.6rem; padding-top:.9rem;
+  border-top:1px dashed var(--edge);
+  display:flex; justify-content:space-between; align-items:flex-end; gap:1rem;
+  font-family:var(--f-data);
+  font-size:.6rem; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--ink-3);
+}
+.terms .sig .name{
+  font-family:var(--f-hand);
+  font-size:1.2rem;
+  letter-spacing:0; text-transform:none;
+  color:var(--ink);
+}
+
+/* ============================================================
+   INSTRUMENT TABLE
+   ============================================================ */
+
+.table-wrap{
+  margin-top:1.4rem;
+  overflow-x:auto;
+  border:1px solid var(--edge);
+  background:var(--paper-2);
+  box-shadow:var(--shadow);
+}
+table{
+  border-collapse:collapse;
+  width:100%;
+  min-width:46rem;
+  font-family:var(--f-data);
+  font-variant-numeric:tabular-nums;
+  font-size:.82rem;
+}
+thead th{
+  text-align:left;
+  font-weight:400;
+  font-size:.58rem; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--ink-3);
+  padding:.7rem .85rem;
+  border-bottom:1px solid var(--rule);
+  white-space:nowrap;
+}
+tbody td{
+  padding:.6rem .85rem;
+  border-bottom:1px solid var(--edge);
+  vertical-align:top;
+}
+tbody tr:last-child td{ border-bottom:0; }
+tbody tr:nth-child(odd){ background:color-mix(in srgb,var(--paper-3) 45%,transparent); }
+td.num{ text-align:right; white-space:nowrap; }
+td.cold{ color:var(--cold); text-align:right; white-space:nowrap; }
+td.note{ font-family:var(--f-body); font-size:.95rem; color:var(--ink-2); min-width:14rem; }
+.pill{
+  display:inline-block;
+  min-width:2.4rem;
+  padding:.12rem .4rem;
+  border:1px solid currentColor;
+  border-radius:1px;
+  font-size:.74rem; letter-spacing:.06em;
+  font-variant-numeric:tabular-nums;
+  text-align:center;
+}
+.pill.high{ color:var(--rule); }
+.pill.mid{ color:var(--lantern); }
+.pill.low{ color:var(--ink-3); }
+
+/* ============================================================
+   APPENDIX: field guide + invoice
+   ============================================================ */
+
+.guide{
+  margin-top:1.2rem;
+  border:1px solid var(--edge);
+  background:var(--paper-2);
+  box-shadow:var(--shadow);
+}
+.guide-head{
+  display:grid; grid-template-columns:1fr 1fr;
+  border-bottom:1px solid var(--rule);
+}
+.guide-head span{
+  padding:.7rem 1rem;
+  font-family:var(--f-plaque);
+  text-transform:uppercase; letter-spacing:.16em;
+  font-size:.66rem;
+}
+.guide-head span:first-child{ border-right:1px solid var(--edge); color:var(--ink-2); }
+.guide-head span:last-child{ color:var(--cold); }
+.guide-row{
+  display:grid; grid-template-columns:1fr 1fr;
+  border-bottom:1px solid var(--edge);
+}
+.guide-row:last-child{ border-bottom:0; }
+.guide-row div{ padding:.75rem 1rem; font-size:.95rem; line-height:1.45; }
+.guide-row div:first-child{ border-right:1px solid var(--edge); color:var(--ink-2); }
+.guide-row.both div{ color:var(--rule); font-family:var(--f-hand); font-size:1.05rem; }
+
+.invoice{
+  font-family:var(--f-data);
+  font-size:.82rem;
+  line-height:1.7;
+}
+.invoice .head{
+  display:flex; justify-content:space-between; flex-wrap:wrap; gap:1rem;
+  padding-bottom:.9rem; margin-bottom:.9rem;
+  border-bottom:2px solid var(--ink);
+}
+.invoice .biz{ font-family:var(--f-plaque); text-transform:uppercase; letter-spacing:.14em; font-size:.86rem; }
+.invoice .biz small{ display:block; font-family:var(--f-data); letter-spacing:.12em; font-size:.58rem; color:var(--ink-3); margin-top:.3rem; }
+.invoice .lines{ display:flex; flex-direction:column; }
+.invoice .line{
+  display:grid; grid-template-columns:1fr auto;
+  gap:1rem; padding:.35rem 0;
+  border-bottom:1px dotted var(--edge);
+}
+.invoice .line span:last-child{ font-variant-numeric:tabular-nums; }
+.invoice .total{
+  display:grid; grid-template-columns:1fr auto; gap:1rem;
+  margin-top:.7rem; padding-top:.7rem;
+  border-top:2px solid var(--ink);
+  font-size:1rem;
+}
+.invoice .note{
+  font-family:var(--f-hand);
+  color:var(--rule);
+  font-size:1.1rem;
+  margin-top:1rem;
+  transform:rotate(-.8deg);
+}
+
+/* ============================================================
+   CLOSE
+   ============================================================ */
+
+.close{
+  margin-top:4rem;
+  padding:2.6rem clamp(1.2rem,4vw,3rem);
+  border:1px solid var(--edge);
+  border-top:3px solid var(--rule);
+  background:var(--paper-2);
+  box-shadow:var(--shadow);
+  display:flex; flex-direction:column; gap:1.1rem;
+  align-items:center; text-align:center;
+}
+.close .amend-line{
+  font-family:var(--f-plaque);
+  text-transform:uppercase;
+  letter-spacing:.16em;
+  font-size:clamp(1rem,.85rem + .7vw,1.5rem);
+}
+.close .amend-line s{
+  color:var(--ink-3);
+  text-decoration-color:var(--rule);
+  text-decoration-thickness:2px;
+}
+.close .amend-line b{ color:var(--rule); font-weight:600; }
+.close p{ max-width:32rem; color:var(--ink-2); }
+.colophon{
+  margin-top:2.6rem;
+  padding-top:1.2rem;
+  border-top:1px solid var(--edge);
+  display:flex; justify-content:space-between; flex-wrap:wrap; gap:.8rem;
+  font-family:var(--f-data);
+  font-size:.6rem; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--ink-3);
+}
+
+/* ============================================================
+   MOTION
+   ============================================================ */
+
+/* Hidden state applies only once JS has confirmed it can reveal them again. */
+:root.js-motion .reveal{ opacity:0; transform:translateY(14px); }
+:root.js-motion .reveal.seen{
+  opacity:1; transform:none;
+  transition:opacity .75s ease, transform .75s cubic-bezier(.2,.7,.2,1);
+}
+:root.js-motion .hoof-walk{ opacity:0; }
+:root.js-motion .hoof-walk.seen{ animation:step .45s ease forwards; }
+@keyframes step{ to{ opacity:1; } }
+
+@media (prefers-reduced-motion: reduce){
+  :root.js-motion .reveal,
+  :root.js-motion .reveal.seen{ opacity:1; transform:none; transition:none; }
+  :root.js-motion .hoof-walk,
+  :root.js-motion .hoof-walk.seen{ opacity:1; animation:none; }
+}
+
+/* ============================================================
+   NARROW
+   ============================================================ */
+
+@media (max-width: 46rem){
+  .ledger{ background-image:none; }
+  .entry{
+    grid-template-columns:minmax(0,1fr);
+    row-gap:.9rem;
+  }
+  .entry-rail{
+    flex-direction:row; align-items:baseline; gap:.75rem;
+    text-align:left; padding-right:0;
+    border-bottom:1px solid var(--rule);
+    padding-bottom:.5rem;
+  }
+  .entry-rail .hoofmark{ margin-top:0; margin-left:auto; }
+  .entry-no{ font-size:1.05rem; }
+  .subject{ grid-template-columns:minmax(0,1fr); }
+  .record .row{ grid-template-columns:7rem minmax(0,1fr); }
+  .guide-head,.guide-row{ grid-template-columns:minmax(0,1fr); }
+  .guide-head span:first-child,.guide-row div:first-child{ border-right:0; border-bottom:1px solid var(--edge); }
+}
+</style>
+
+<!-- shared glyphs -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="hoof" viewBox="0 0 28 30">
+      <path fill-rule="evenodd" d="M14 1c7.2 0 13 6.1 13 14 0 7.6-5.4 14-13 14S1 22.6 1 15C1 7.1 6.8 1 14 1Zm0 12.5 5.6 13.3c-3.4 1.6-7.8 1.6-11.2 0L14 13.5Z"/>
+    </symbol>
+    <symbol id="horse" viewBox="0 0 200 140">
+      <path d="M167 48C182 60 192 86 186 118C184 94 178 68 164 58Z"/>
+      <path d="M38 42C42 33 47 27 54 22L56 20L58 15L61 21C69 25 78 32 86 40C104 38 120 40 132 39C148 38 162 42 170 54C174 64 172 76 164 88C161 93 158 98 155 104L152 121L156 133L147 133L145 121L147 102C148 94 149 90 150 86C128 94 104 94 88 84L86 106L83 123L87 133L78 133L76 123L79 104L81 86C76 74 72 64 70 56C66 47 61 44 54 45C48 47 43 50 39 52C34 53 33 47 38 42Z"/>
+    </symbol>
+    <symbol id="horse-far" viewBox="0 0 200 140">
+      <path d="M136 88l-3 14-2 19 4 12M97 86l-2 18-3 19 4 12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+    </symbol>
+  </defs>
+</svg>
+
+<main class="sheet">
+
+  <!-- ==================== COVER ==================== -->
+  <header class="cover">
+    <div class="cover-stamp">
+      <span>Vol.&nbsp;I</span><span class="bar"></span>
+      <span>Kept nightly</span><span class="bar"></span>
+      <span>Returned by the council without comment</span>
+    </div>
+
+    <h1>
+      <span class="qual">A complete and chronological record of</span>
+      The Horse<br>Inside<br>The House
+    </h1>
+
+    <p class="dek">I am not a superstitious man. I am a man who keeps records. On the twelfth of October something began walking about upstairs, and I did the only sensible thing available to me: I bought a ledger and ruled it into columns.</p>
+
+    <div class="docket">
+      <div><span class="k">Property</span><span class="v">14 Brackwater Lane</span></div>
+      <div><span class="k">Keeper of the ledger</span><span class="v">Sir Fex</span></div>
+      <div><span class="k">Period covered</span><span class="v">12 Oct &mdash; 2 Jan</span></div>
+      <div><span class="k">Occupants</span><span class="v">1 living <em>&middot; 1 contested</em></span></div>
+    </div>
+
+    <nav class="contents" aria-label="Contents">
+      <a href="#preface"><span class="num">I</span>Preface</a>
+      <a href="#property"><span class="num">II</span>The Property</a>
+      <a href="#ledger"><span class="num">III</span>The Ledger</a>
+      <a href="#subject"><span class="num">IV</span>The Subject</a>
+      <a href="#terms"><span class="num">V</span>Terms of Cohabitation</a>
+      <a href="#appendix"><span class="num">VI</span>Appendix</a>
+    </nav>
+  </header>
+
+  <!-- ==================== I. PREFACE ==================== -->
+  <section class="section" id="preface">
+    <div class="section-head">
+      <span class="roman">I</span>
+      <h2>Preface</h2>
+      <span class="bar"></span>
+    </div>
+
+    <div class="prose">
+      <p class="lede">Everyone I have told about this has asked the same first question, which is whether I was frightened. The honest answer is that I was frightened for about nine days, and after that I was mostly inconvenienced.</p>
+      <p>A ghost horse is not what the films prepare you for. There is no screaming. There is no blood on any wall of mine. There is, instead, a very large animal that will not use a doorway you have shut, will not tell you its name, and will stand precisely where you were about to walk, with the specific patience of somebody waiting for you to notice you have parked badly.</p>
+      <p>I have kept this ledger to establish, for my own peace of mind, that I am not inventing any of it. The instrument readings are genuine. The flour is genuine. The invoice, regrettably, is also genuine.</p>
+    </div>
+  </section>
+
+  <!-- ==================== II. PROPERTY ==================== -->
+  <section class="section" id="property">
+    <div class="section-head">
+      <span class="roman">II</span>
+      <h2>The Property</h2>
+      <span class="bar"></span>
+    </div>
+
+    <div class="prose">
+      <p>Two bedrooms, one stubborn boiler, and a ground floor that the subject regards as hers. I have surveyed it and marked the places where things reliably happen. There are more of them than I would like.</p>
+    </div>
+
+    <figure class="plate reveal" id="plate-plan">
+      <div class="plate-head">
+        <span class="no">Plate I</span>
+        <span class="meta">Ground floor &middot; surveyed 4 Nov &middot; not to scale, to spite</span>
+      </div>
+      <div class="plate-body flush">
+        <svg viewBox="0 0 900 440" role="img" aria-label="Annotated floor plan of the ground floor of 14 Brackwater Lane. Six numbered markers show the doorway where the horse stands, the oat bowl, the disputed vacuum dock, the stairs, the microwave and the flour. A dashed line traces the nightly patrol from the kitchen to the foot of the stairs.">
+          <g id="plan-ink" fill="none" stroke="currentColor" stroke-width="3">
+            <rect x="50" y="46" width="800" height="330"/>
+            <path d="M370 46v120M370 226v150M620 46v330M620 236h230"/>
+            <path d="M50 208h150M200 208v168"/>
+            <path d="M50 250h150M50 292h150M50 334h150" stroke-width="2" opacity=".7"/>
+            <path d="M370 166v60M620 136v60" stroke-dasharray="6 8" opacity=".5"/>
+          </g>
+
+          <g class="plan-label">
+            <text x="72" y="96">Sitting Room</text>
+            <text x="72" y="232">Stairs</text>
+            <text x="404" y="96">Hall</text>
+            <text x="652" y="96">Kitchen</text>
+            <text x="652" y="272">Back Passage</text>
+          </g>
+
+          <path id="patrol" d="M740 200 C 700 268 500 262 460 205 C 425 155 300 148 175 178"
+                fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-dasharray="10 9" opacity=".8"/>
+          <path d="M186 164 L168 180 L188 190" fill="none" stroke="currentColor" stroke-width="2.5" opacity=".8"/>
+
+          <g class="plan-mark">
+            <g><circle cx="460" cy="205" r="14"/><text x="460" y="211">1</text></g>
+            <g><circle cx="740" cy="200" r="14"/><text x="740" y="206">2</text></g>
+            <g><circle cx="762" cy="322" r="14"/><text x="762" y="328">3</text></g>
+            <g><circle cx="128" cy="292" r="14"/><text x="128" y="298">4</text></g>
+            <g><circle cx="800" cy="112" r="14"/><text x="800" y="118">5</text></g>
+            <g><circle cx="530" cy="322" r="14"/><text x="530" y="328">6</text></g>
+          </g>
+
+          <g class="plan-key">
+            <path d="M50 412h120M50 405v14M170 405v14" stroke="currentColor" stroke-width="2" fill="none"/>
+            <text x="182" y="417">3 metres, or roughly one horse</text>
+            <path d="M600 412h56" stroke="var(--cold)" stroke-width="2.5" stroke-dasharray="10 9" fill="none"/>
+            <text x="668" y="417">Nightly patrol</text>
+          </g>
+        </svg>
+        <ol class="plan-legend">
+          <li><span>1</span>The doorway. Stands here, all night, facing me.</li>
+          <li><span>2</span>Oat bowl. Arranged nightly, never eaten.</li>
+          <li><span>3</span>Gerald's dock, relocated under duress.</li>
+          <li><span>4</span>The stairs. Cannot climb them. Is up there anyway.</li>
+          <li><span>5</span>The microwave. Under no circumstances.</li>
+          <li><span>6</span>Flour, laid nightly. Prints lead out only.</li>
+        </ol>
+      </div>
+      <figcaption><b>Route.</b> The dashed line is the nightly patrol, established within a fortnight and unvaried since: kitchen, hall, the long look through the sitting-room door, then the foot of the stairs, where the record ends and the mystery begins.</figcaption>
+    </figure>
+    <style>
+      .plan-label text{ font-family:var(--f-plaque); font-size:18px; letter-spacing:2.6px; text-transform:uppercase; fill:var(--ink-2); }
+      .plan-key text{ font-family:var(--f-data); font-size:12px; letter-spacing:1.4px; fill:var(--ink-3); text-transform:uppercase; }
+      .plan-key path{ stroke:var(--ink-3); }
+      .plan-mark circle{ fill:var(--rule); }
+      .plan-mark text{ font-family:var(--f-data); font-size:15px; fill:var(--paper-2); text-anchor:middle; font-weight:700; }
+      #plan-ink{ color:var(--ink); }
+      #patrol{ color:var(--cold); }
+      #plate-plan svg{ padding:1rem 1rem 0; }
+      .plan-legend{
+        list-style:none; margin:0;
+        padding:0 1rem 1.1rem;
+        display:grid; grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));
+        gap:.5rem 1.6rem;
+      }
+      .plan-legend li{
+        display:grid; grid-template-columns:1.5rem 1fr; gap:.5rem; align-items:baseline;
+        font-size:.9rem; color:var(--ink-2); line-height:1.4;
+      }
+      .plan-legend span{
+        font-family:var(--f-data); font-size:.66rem; font-weight:700;
+        width:1.25rem; height:1.25rem; border-radius:50%;
+        display:grid; place-items:center;
+        background:var(--rule); color:var(--paper-2);
+      }
+    </style>
+  </section>
+
+  <!-- ==================== III. LEDGER ==================== -->
+  <section class="section" id="ledger">
+    <div class="section-head">
+      <span class="roman">III</span>
+      <h2>The Ledger</h2>
+      <span class="bar"></span>
+    </div>
+
+    <div class="prose">
+      <p>Forty-seven entries were made. These are the ones that matter, which is to say these are the ones I would be prepared to swear to.</p>
+    </div>
+
+    <div class="ledger">
+
+      <article class="entry">
+        <div class="entry-rail">
+          <span class="entry-no"><span>No.</span>&nbsp;001</span>
+          <span class="entry-date">12 Oct</span>
+          <span class="entry-time">03.14</span>
+          <svg class="hoofmark" aria-hidden="true"><use href="#hoof"/></svg>
+        </div>
+        <div class="entry-body">
+          <h3>Pipes</h3>
+          <p>Woken at a quarter past three by four beats, then four more, crossing the upstairs hall from the bathroom to the spare room. Concluded: pipes. Went back to sleep pleased with myself.</p>
+          <p>Have since established that there are no pipes in the upstairs hall. Amending the entry to read: probably pipes.</p>
+          <div class="strip">
+            <div><span class="k">Temp. drop</span><span class="v">0.4 &deg;C</span></div>
+            <div><span class="k">Hoofbeats</span><span class="v">8</span></div>
+            <div><span class="k">Doors opened</span><span class="v flat">0</span></div>
+            <div><span class="k">Verdict</span><span class="v warm">Pipes</span></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="entry">
+        <div class="entry-rail">
+          <span class="entry-no"><span>No.</span>&nbsp;004</span>
+          <span class="entry-date">19 Oct</span>
+          <span class="entry-time">23.50</span>
+          <svg class="hoofmark" aria-hidden="true"><use href="#hoof"/></svg>
+        </div>
+        <div class="entry-body">
+          <h3>First sighting, kitchen doorway</h3>
+          <p>Went down for a glass of water and there was a horse in the doorway. Grey, or the memory of grey. Sixteen hands at least, in a doorway built for a man of five foot nine, which raises a question of geometry I have chosen not to pursue.</p>
+          <p>It did not charge. It did not moan. It looked at me for eleven seconds &mdash; I counted, because counting was all I had &mdash; and then it looked pointedly at the sink, where I had left three days of washing-up. Then it left through the wall it had refused to arrive through.</p>
+          <div class="strip">
+            <div><span class="k">Temp. drop</span><span class="v">6.1 &deg;C</span></div>
+            <div><span class="k">Duration</span><span class="v">11 s</span></div>
+            <div><span class="k">Eye contact</span><span class="v">Yes</span></div>
+            <div><span class="k">Washing-up</span><span class="v warm">Done, 00.20</span></div>
+          </div>
+          <p class="margin-note">I want it on record that I did the washing-up because I wanted to. Not because of the horse.</p>
+        </div>
+      </article>
+
+      <article class="entry">
+        <div class="entry-rail">
+          <span class="entry-no"><span>No.</span>&nbsp;006</span>
+          <span class="entry-date">22 Oct</span>
+          <span class="entry-time">07.05</span>
+          <svg class="hoofmark" aria-hidden="true"><use href="#hoof"/></svg>
+        </div>
+        <div class="entry-body">
+          <h3>The oats</h3>
+          <p>Left out a bowl of oats overnight as a gesture of goodwill. Nothing eaten. Every oat had, however, been sorted into three rows by size.</p>
+          <p>I did not previously know that oats had sizes. They do. I have been informed.</p>
+          <div class="strip">
+            <div><span class="k">Oats offered</span><span class="v">240 g</span></div>
+            <div><span class="k">Oats consumed</span><span class="v flat">0 g</span></div>
+            <div><span class="k">Oats sorted</span><span class="v">240 g</span></div>
+            <div><span class="k">Rows</span><span class="v">3</span></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="entry">
+        <div class="entry-rail">
+          <span class="entry-no"><span>No.</span>&nbsp;009</span>
+          <span class="entry-date">28 Oct</span>
+          <span class="entry-time">All night</span>
+          <svg class="hoofmark" aria-hidden="true"><use href="#hoof"/></svg>
+        </div>
+        <div class="entry-body">
+          <h3>On doors, and the closing thereof</h3>
+          <p>Here is the part nobody believes. She will not go through a wall if a door exists. She will use the door. And if the door is shut she will stand outside it and object, at length, in a manner I can only describe as a complaint being filed.</p>
+          <p>Closed the sitting-room door at ten past nine to keep the heat in. At half eleven I opened it again and apologised out loud, to a room. Every internal door in this house has been open since. My heating bill has been entered into this ledger as a paranormal expense, because that is precisely what it is.</p>
+          <div class="strip">
+            <div><span class="k">Doors shut</span><span class="v flat">1</span></div>
+            <div><span class="k">Objection</span><span class="v">142 min</span></div>
+            <div><span class="k">Doors shut since</span><span class="v flat">0</span></div>
+            <div><span class="k">Heating (Nov)</span><span class="v warm">+&pound;61</span></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="entry">
+        <div class="entry-rail">
+          <span class="entry-no"><span>No.</span>&nbsp;013</span>
+          <span class="entry-date">2 Nov</span>
+          <span class="entry-time">02.40</span>
+          <svg class="hoofmark" aria-hidden="true"><use href="#hoof"/></svg>
+        </div>
+        <div class="entry-body">
+          <h3>The stairs (unresolved)</h3>
+          <p>She cannot climb the stairs. I have watched her try. She gets three risers up, thinks better of it in the way of a large animal on a narrow staircase, and reverses down into the hall looking embarrassed, which is worse than frightening.</p>
+          <p>She is upstairs every night. Both of these things are true. I have checked. I have checked a great deal.</p>
+          <div class="strip">
+            <div><span class="k">Ascents observed</span><span class="v flat">0</span></div>
+            <div><span class="k">Ascents achieved</span><span class="v">Nightly</span></div>
+            <div><span class="k">Method</span><span class="v warm">Unknown</span></div>
+            <div><span class="k">Filed as</span><span class="v">Open</span></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="entry">
+        <div class="entry-rail">
+          <span class="entry-no"><span>No.</span>&nbsp;017</span>
+          <span class="entry-date">9 Nov</span>
+          <span class="entry-time">16.30</span>
+          <svg class="hoofmark" aria-hidden="true"><use href="#hoof"/></svg>
+        </div>
+        <div class="entry-body">
+          <h3>Hostilities: Gerald</h3>
+          <p>Gerald is the robot vacuum. Gerald has one instruction in life, which is to return to his dock at half four. The dock sits in the hall. The hall is hers.</p>
+          <p>For six days Gerald advanced and was blocked. He would turn ninety degrees and try again; she would move eight inches and block him again. He beeped. She did not blink. On the seventh day I moved the dock into the cupboard under the stairs and told them both that this was a compromise and that neither of them had won.</p>
+          <p>Gerald docks in the cupboard now. She stands in the hall looking directly at the cupboard. I maintain that this is a ceasefire. I am aware of how it looks.</p>
+          <div class="strip">
+            <div><span class="k">Engagements</span><span class="v">14</span></div>
+            <div><span class="k">Gerald advanced</span><span class="v flat">0 cm</span></div>
+            <div><span class="k">Casualties</span><span class="v flat">None</span></div>
+            <div><span class="k">Status</span><span class="v warm">Ceasefire</span></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="entry">
+        <div class="entry-rail">
+          <span class="entry-no"><span>No.</span>&nbsp;021</span>
+          <span class="entry-date">15 Nov</span>
+          <span class="entry-time">21.02</span>
+          <svg class="hoofmark" aria-hidden="true"><use href="#hoof"/></svg>
+        </div>
+        <div class="entry-body">
+          <h3>The microwave incident</h3>
+          <p>One beep. One. She went through the kitchen ceiling &mdash; not up the stairs, not through the door she is otherwise so principled about, but <em>straight up through the ceiling</em>, which is a thing I now know she can do and has simply been declining to do out of what I can only assume is manners.</p>
+          <p>She did not come downstairs for two days. There is a hairline crack above the hob that the surveyor will never be told about.</p>
+          <p>I now stop the microwave at one second remaining. Every time. For the rest of my life, presumably.</p>
+          <div class="strip">
+            <div><span class="k">Beeps</span><span class="v flat">1</span></div>
+            <div><span class="k">Ceiling breach</span><span class="v">Confirmed</span></div>
+            <div><span class="k">Absence</span><span class="v">51 hrs</span></div>
+            <div><span class="k">Spectral index</span><span class="v warm">98</span></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="entry">
+        <div class="entry-rail">
+          <span class="entry-no"><span>No.</span>&nbsp;024</span>
+          <span class="entry-date">21 Nov</span>
+          <span class="entry-time">11.15</span>
+          <svg class="hoofmark" aria-hidden="true"><use href="#hoof"/></svg>
+        </div>
+        <div class="entry-body">
+          <h3>The farrier attends</h3>
+          <p>Rang three farriers. Two hung up. The third, Mr D. Coalhouse, said "ah" in a way that suggested this was not his first, and asked whether she was going short on the near fore. She was. I had not mentioned it.</p>
+          <p>He worked for fifty minutes on a horse he could not see, using a method he described as "vibes and forty years." At one point he said "stand over" and something in my hall stood over.</p>
+          <p>The hoofbeats have been markedly crisper since. I have paid the invoice. I have framed the invoice.</p>
+          <div class="strip">
+            <div><span class="k">Attendance</span><span class="v">50 min</span></div>
+            <div><span class="k">Shoes</span><span class="v">4, speculative</span></div>
+            <div><span class="k">Gait after</span><span class="v">Level</span></div>
+            <div><span class="k">Invoice</span><span class="v warm">&pound;180.00</span></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="entry">
+        <div class="entry-rail">
+          <span class="entry-no"><span>No.</span>&nbsp;029</span>
+          <span class="entry-date">2 Dec</span>
+          <span class="entry-time">19.40</span>
+          <svg class="hoofmark" aria-hidden="true"><use href="#hoof"/></svg>
+        </div>
+        <div class="entry-body">
+          <h3>Naming</h3>
+          <p>Tried, over the course of an evening: Bartholomew. Shadow. Duchess. Nightmare, which I regretted instantly and apologised for. Mr Hooves. Susan. Nothing.</p>
+          <p>Then I needed to get past her to the fridge, and I said "excuse me," and she turned round.</p>
+          <p>Tried it again the next morning. Same result. Tried it on Thursday from two rooms away, and heard eight beats coming down the hall.</p>
+          <p>Her name is Excuse Me. I did not choose this. I have been overruled.</p>
+          <div class="strip">
+            <div><span class="k">Names tested</span><span class="v">31</span></div>
+            <div><span class="k">Responses</span><span class="v">1</span></div>
+            <div><span class="k">Confirmed at range</span><span class="v">2 rooms</span></div>
+            <div><span class="k">Name</span><span class="v warm">Excuse Me</span></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="entry">
+        <div class="entry-rail">
+          <span class="entry-no"><span>No.</span>&nbsp;038</span>
+          <span class="entry-date">19 Dec</span>
+          <span class="entry-time">01.55</span>
+          <svg class="hoofmark" aria-hidden="true"><use href="#hoof"/></svg>
+        </div>
+        <div class="entry-body">
+          <h3>Storm</h3>
+          <p>Wind at sixty-odd miles an hour off the marsh, and the gate at the bottom of the garden going all night. She hates wind. I did not know that about her until tonight, and I have thought about very little else since.</p>
+          <p>She came up &mdash; by whatever means she comes up &mdash; and stood at the foot of my bed in the dark, breathing in a way that a thing which does not breathe should not be able to manage, and shaking.</p>
+          <p>Clause four of the Terms says that the subject will not enter the bedroom. Clause four was my idea. I got up, I found the ledger, and I struck it out myself before she could.</p>
+          <div class="strip">
+            <div><span class="k">Wind</span><span class="v warm">62 mph</span></div>
+            <div><span class="k">Temp. drop</span><span class="v">11.2 &deg;C</span></div>
+            <div><span class="k">Clause 4</span><span class="v">Struck</span></div>
+            <div><span class="k">Slept</span><span class="v flat">Neither</span></div>
+          </div>
+          <p class="margin-note">She put her head down near my hand for a moment. There was nothing there. It was still the best part of my year.</p>
+        </div>
+      </article>
+
+      <article class="entry">
+        <div class="entry-rail">
+          <span class="entry-no"><span>No.</span>&nbsp;044</span>
+          <span class="entry-date">31 Dec</span>
+          <span class="entry-time">22.00</span>
+          <svg class="hoofmark" aria-hidden="true"><use href="#hoof"/></svg>
+        </div>
+        <div class="entry-body">
+          <h3>Fireworks</h3>
+          <p>Sat on the floor of the hall with the lights off from ten until gone midnight, talking absolute nonsense to an empty corridor, as one does for any animal on the thirty-first of December.</p>
+          <p>Mrs Ballantyne next door says she saw me through the glass and that I want to be careful. Mrs Ballantyne has maintained since October that all of this is the pipes. Mrs Ballantyne has never once been in my upstairs hall.</p>
+          <div class="strip">
+            <div><span class="k">Duration</span><span class="v">146 min</span></div>
+            <div><span class="k">Nonsense talked</span><span class="v">Continuous</span></div>
+            <div><span class="k">Bolting</span><span class="v flat">None</span></div>
+            <div><span class="k">Neighbourly concern</span><span class="v warm">Noted</span></div>
+          </div>
+        </div>
+      </article>
+
+    </div>
+
+    <!-- PLATE II &mdash; hoofprints -->
+    <figure class="plate reveal" id="plate-flour">
+      <div class="plate-head">
+        <span class="no">Plate II</span>
+        <span class="meta">Hall, 06.50 &middot; flour laid 23.30 the previous evening</span>
+      </div>
+      <div class="plate-body flush">
+        <svg viewBox="0 0 900 420" role="img" aria-label="Diagram of hoofprints in spilled flour crossing the hall floor, continuing up the stair risers, and appearing three times on the ceiling.">
+          <rect x="0" y="0" width="900" height="420" fill="var(--paper-3)" opacity=".35"/>
+          <!-- floor / stair / ceiling guides -->
+          <g stroke="var(--edge)" stroke-width="2" fill="none">
+            <path d="M40 330h520"/>
+            <path d="M560 330l60-40 60-40 60-40 60-40"/>
+            <path d="M40 90h820" stroke-dasharray="7 8"/>
+          </g>
+          <g class="flour-label">
+            <text x="40" y="356">Floor &mdash; flour, 2 mm</text>
+            <text x="622" y="356">Stairs</text>
+            <text x="40" y="74">Ceiling</text>
+          </g>
+
+          <!-- prints along the floor -->
+          <g class="prints" fill="var(--ink)" opacity=".8">
+            <g class="hoof-walk" style="--d:0"><use href="#hoof" x="90"  y="292" width="26" height="28"/></g>
+            <g class="hoof-walk" style="--d:1"><use href="#hoof" x="168" y="300" width="26" height="28"/></g>
+            <g class="hoof-walk" style="--d:2"><use href="#hoof" x="246" y="292" width="26" height="28"/></g>
+            <g class="hoof-walk" style="--d:3"><use href="#hoof" x="324" y="300" width="26" height="28"/></g>
+            <g class="hoof-walk" style="--d:4"><use href="#hoof" x="402" y="292" width="26" height="28"/></g>
+            <g class="hoof-walk" style="--d:5"><use href="#hoof" x="480" y="300" width="26" height="28"/></g>
+            <!-- up the risers -->
+            <g class="hoof-walk" style="--d:6"><use href="#hoof" x="582" y="272" width="24" height="26"/></g>
+            <g class="hoof-walk" style="--d:7"><use href="#hoof" x="642" y="232" width="24" height="26"/></g>
+            <g class="hoof-walk" style="--d:8"><use href="#hoof" x="702" y="192" width="24" height="26"/></g>
+            <g class="hoof-walk" style="--d:9"><use href="#hoof" x="762" y="152" width="24" height="26"/></g>
+          </g>
+          <!-- ceiling prints -->
+          <g class="prints ceiling" fill="var(--rule)" opacity=".9">
+            <g class="hoof-walk" style="--d:11"><use href="#hoof" x="300" y="60" width="24" height="26" transform="rotate(180 312 73)"/></g>
+            <g class="hoof-walk" style="--d:12"><use href="#hoof" x="372" y="60" width="24" height="26" transform="rotate(180 384 73)"/></g>
+            <g class="hoof-walk" style="--d:13"><use href="#hoof" x="444" y="60" width="24" height="26" transform="rotate(180 456 73)"/></g>
+          </g>
+          <text x="288" y="132" class="flour-note hot">Three prints. On the ceiling. Facing the wrong way.</text>
+          <text x="90" y="252" class="flour-note">Direction of travel: out. Always out.</text>
+          <path d="M90 262 l0 18 M84 274 l6 8 6-8" stroke="var(--ink-3)" stroke-width="2" fill="none"/>
+          <text x="860" y="196" text-anchor="end" class="flour-note">Prints stop at riser four.</text>
+        </svg>
+      </div>
+      <figcaption><b>The direction problem.</b> Every morning the prints lead out of the kitchen, along the hall and up as far as the fourth riser, where they stop. There has never once been a set leading <em>in</em>. She has been in this house every night since October and has never, by the evidence, arrived.</figcaption>
+    </figure>
+    <style>
+      .flour-label text{ font-family:var(--f-data); font-size:12px; letter-spacing:1.6px; text-transform:uppercase; fill:var(--ink-3); }
+      .flour-note{ font-family:var(--f-data); font-size:14px; letter-spacing:.5px; fill:var(--ink-2); }
+      .flour-note.hot{ fill:var(--rule); }
+      .hoof-walk.seen{ animation-delay:calc(var(--d) * .09s); }
+    </style>
+
+    <!-- PLATE III &mdash; thermal -->
+    <figure class="plate reveal" id="plate-thermal">
+      <div class="plate-head">
+        <span class="no">Plate III</span>
+        <span class="meta">Kitchen &middot; 03.14 &middot; hired thermal camera, &pound;22/day</span>
+      </div>
+      <div class="plate-body flush">
+        <canvas id="thermal" width="880" height="440" role="img"
+          aria-label="A thermal image of the kitchen showing warm patches at the boiler and the fridge motor, and a large cold region in the exact silhouette of a horse standing in the middle of the room."></canvas>
+      </div>
+      <figcaption><b>Cold spot.</b> A draught is cold on the back of the neck. This is cold in the shape of a sixteen-hand mare standing square in front of the fridge. The camera-hire firm asked what I was surveying. I said damp. They said it didn't look like damp. I agreed that it did not.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ==================== IV. SUBJECT ==================== -->
+  <section class="section" id="subject">
+    <div class="section-head">
+      <span class="roman">IV</span>
+      <h2>The Subject</h2>
+      <span class="bar"></span>
+    </div>
+
+    <div class="subject">
+      <figure class="plate reveal" style="margin:0">
+        <div class="plate-head">
+          <span class="no">Plate IV</span>
+          <span class="meta">Schematic &middot; reconstructed</span>
+        </div>
+        <div class="plate-body">
+          <svg viewBox="0 36 270 172" role="img" aria-label="A schematic side-view measurement drawing of the horse with a height marker reading sixteen point one hands.">
+            <!-- baseline + height rule -->
+            <g stroke="var(--edge)" stroke-width="1.5" fill="none">
+              <path d="M14 178h232"/>
+              <path d="M238 178V48M232 48h12M232 178h12"/>
+            </g>
+            <g stroke="var(--cold)" stroke-width="1" stroke-dasharray="4 5" fill="none" opacity=".8">
+              <path d="M104 60h130"/>
+            </g>
+            <use href="#horse-far" x="24" y="42" width="190" height="133" color="var(--ink-3)" opacity=".5"/>
+            <use href="#horse" x="24" y="42" width="190" height="133" fill="var(--cold)" opacity=".14"/>
+            <use href="#horse" x="24" y="42" width="190" height="133"
+                 fill="none" stroke="var(--ink)" stroke-width="1.4" stroke-dasharray="5 4"/>
+            <circle cx="104" cy="60" r="2.5" fill="var(--cold)"/>
+            <text x="256" y="115" class="dim" transform="rotate(-90 256 115)">16.1 hh (est.)</text>
+            <text x="108" y="53" class="dim" fill="var(--cold)">Withers</text>
+            <text x="246" y="197" text-anchor="end" class="dim">Tape passes through</text>
+          </svg>
+        </div>
+      </figure>
+
+      <div class="record">
+        <h3>Field record &middot; subject 001</h3>
+        <dl>
+          <div class="row"><dt>Name</dt><dd>Excuse Me <span class="q">(given 2 Dec.; she considers it correct)</span></dd></div>
+          <div class="row"><dt>Height</dt><dd>16.1 hh, estimated. The tape passes through her, which the tape does not appear to mind.</dd></div>
+          <div class="row"><dt>Colour</dt><dd>Unresolved. Grey in the hall, considerably darker on the stairs.</dd></div>
+          <div class="row"><dt>Sex</dt><dd>Mare. I called her "sir" for six weeks. She has not forgotten this and I do not expect her to.</dd></div>
+          <div class="row"><dt>Temperament</dt><dd>Judgemental but fair.</dd></div>
+          <div class="row"><dt>Known fears</dt><dd>The microwave. High wind. The word "glue," which has been retired from this house in every sense, including adhesive.</dd></div>
+          <div class="row"><dt>Preferences</dt><dd>Open doors. Oats, arranged rather than eaten. The six o'clock weather forecast, watched from the doorway. Standing exactly where I am about to walk.</dd></div>
+          <div class="row"><dt>Feeding</dt><dd>Not applicable. Emotionally: constant.</dd></div>
+          <div class="row"><dt>Last farried</dt><dd>21 Nov. &mdash; D. Coalhouse, speculative, see Appendix.</dd></div>
+          <div class="row"><dt>Tell</dt><dd>Wet hay, and a five-bar gate swinging somewhere a good deal further away than my garden.</dd></div>
+        </dl>
+      </div>
+    </div>
+    <style>
+      .dim{ font-family:var(--f-data); font-size:8px; letter-spacing:1.2px; text-transform:uppercase; fill:var(--ink-3); }
+    </style>
+
+    <!-- PLATE V &mdash; chart -->
+    <figure class="plate reveal" id="plate-chart">
+      <div class="plate-head">
+        <span class="no">Plate V</span>
+        <span class="meta">Nightly spectral index &middot; 12 Oct &mdash; 2 Jan &middot; 83 nights, unbroken</span>
+      </div>
+      <div class="plate-body flush">
+        <svg id="chart" viewBox="0 0 900 340" role="img"
+          aria-label="Line chart of the nightly spectral index from October to January, rising through November, spiking sharply at the microwave incident on 15 November and again during the storm on 19 December, and settling to a low steady band at the end of the record."></svg>
+      </div>
+      <figcaption><b>Reading the line.</b> Two spikes: the microwave, and the storm. What interests me is the end of it &mdash; the long quiet band through January. I had assumed a settled haunting meant a fading one. It appears instead to mean a settled horse.</figcaption>
+    </figure>
+
+    <div class="table-wrap">
+      <table>
+        <caption class="plaque" style="text-align:left;padding:.8rem 1rem;font-size:.62rem;color:var(--ink-3);letter-spacing:.18em;">Instrument log &mdash; selected nights</caption>
+        <thead>
+          <tr>
+            <th scope="col">Night</th>
+            <th scope="col">Hour</th>
+            <th scope="col">Temp. drop</th>
+            <th scope="col">Hoofbeats</th>
+            <th scope="col">Doors opened</th>
+            <th scope="col">Oats moved</th>
+            <th scope="col">Index</th>
+            <th scope="col">Note</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>12 Oct</td><td>03.14</td><td class="cold">0.4 &deg;C</td><td class="num">8</td><td class="num">0</td><td class="num">&mdash;</td><td class="num"><span class="pill low">11</span></td><td class="note">Pipes. Allegedly.</td></tr>
+          <tr><td>19 Oct</td><td>23.50</td><td class="cold">6.1 &deg;C</td><td class="num">22</td><td class="num">1</td><td class="num">&mdash;</td><td class="num"><span class="pill mid">44</span></td><td class="note">Eye contact. Washing-up subsequently done.</td></tr>
+          <tr><td>22 Oct</td><td>&mdash;</td><td class="cold">3.0 &deg;C</td><td class="num">&mdash;</td><td class="num">2</td><td class="num">240 g</td><td class="num"><span class="pill mid">38</span></td><td class="note">Sorted by size into three rows.</td></tr>
+          <tr><td>28 Oct</td><td>21.10</td><td class="cold">4.8 &deg;C</td><td class="num">61</td><td class="num">0</td><td class="num">12 g</td><td class="num"><span class="pill mid">57</span></td><td class="note">One door shut. Objection lodged, 142 min.</td></tr>
+          <tr><td>15 Nov</td><td>21.02</td><td class="cold">9.4 &deg;C</td><td class="num">4</td><td class="num">0</td><td class="num">0 g</td><td class="num"><span class="pill high">98</span></td><td class="note">Microwave. Ceiling.</td></tr>
+          <tr><td>21 Nov</td><td>11.15</td><td class="cold">2.2 &deg;C</td><td class="num">40</td><td class="num">3</td><td class="num">8 g</td><td class="num"><span class="pill mid">35</span></td><td class="note">Farrier attends. Gait level afterwards.</td></tr>
+          <tr><td>19 Dec</td><td>01.55</td><td class="cold">11.2 &deg;C</td><td class="num">96</td><td class="num">4</td><td class="num">0 g</td><td class="num"><span class="pill high">93</span></td><td class="note">Storm. Clause 4 struck by me, not by her.</td></tr>
+          <tr><td>31 Dec</td><td>22.00</td><td class="cold">1.9 &deg;C</td><td class="num">14</td><td class="num">2</td><td class="num">3 g</td><td class="num"><span class="pill low">21</span></td><td class="note">Fireworks. No bolting. Nonsense talked throughout.</td></tr>
+          <tr><td>2 Jan</td><td>&mdash;</td><td class="cold">0.8 &deg;C</td><td class="num">6</td><td class="num">1</td><td class="num">2 g</td><td class="num"><span class="pill low">9</span></td><td class="note">Nothing to report, which is the best possible result.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ==================== V. TERMS ==================== -->
+  <section class="section" id="terms">
+    <div class="section-head">
+      <span class="roman">V</span>
+      <h2>Terms of Cohabitation</h2>
+      <span class="bar"></span>
+    </div>
+
+    <div class="prose">
+      <p>Drafted 5 November and taped to the fridge, where it remains. It has been amended twice. I made one of the amendments. I am reasonably confident about which.</p>
+    </div>
+
+    <div class="terms-wrap">
+      <div class="terms">
+        <h3>Terms of Cohabitation</h3>
+        <p class="sub">14 Brackwater Lane &middot; posted on the fridge &middot; binding, apparently</p>
+        <ol>
+          <li><span class="clause">The subject may use any room on the ground floor, at any hour, including the ones I am in.</span></li>
+          <li><span class="clause">The subject may use the stairs by whatever means she currently employs. No explanation is required. An explanation would nevertheless be very welcome.</span></li>
+          <li><span class="clause">Doors remain open. All of them. Always. I have made my peace with this and so has the boiler.</span></li>
+          <li class="struck"><span class="clause"><em>The subject will not enter the bedroom.</em><span class="amend">struck 19 Dec &mdash; my hand, my idea, don't ask</span></span></li>
+          <li><span class="clause">The word "glue" is retired from this house in every sense, including adhesive. Sellotape has been reclassified as "the sticky one."</span></li>
+          <li><span class="clause">Gerald docks in the cupboard. This was not my idea and I remain publicly neutral on the matter.</span></li>
+          <li><span class="clause">The oats stay out. Nobody eats the oats. That is not the point of the oats.</span></li>
+        </ol>
+        <div class="sig">
+          <span>Signed, both parties<br><span class="name">Fex</span></span>
+          <span>Counter&nbsp;signed<br><span class="name">&mdash; (a hoofprint, 6 Nov)</span></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== VI. APPENDIX ==================== -->
+  <section class="section" id="appendix">
+    <div class="section-head">
+      <span class="roman">VI</span>
+      <h2>Appendix</h2>
+      <span class="bar"></span>
+    </div>
+
+    <div class="prose">
+      <p>For anyone arriving at this ledger in the same state I arrived at October: a field guide, and the invoice, so that you know what you are in for financially.</p>
+    </div>
+
+    <div class="guide">
+      <div class="guide-head"><span>A draught</span><span>A ghost horse</span></div>
+      <div class="guide-row"><div>Cold on the back of your neck.</div><div>Cold in the exact outline of a horse.</div></div>
+      <div class="guide-row"><div>Stops when you shut the window.</div><div>Escalates when you shut anything.</div></div>
+      <div class="guide-row"><div>Has no opinions.</div><div>Has several, about you.</div></div>
+      <div class="guide-row"><div>Does not move the oats.</div><div>Sorts the oats. By size. Into rows.</div></div>
+      <div class="guide-row"><div>Does not watch the weather forecast.</div><div>Watches the weather forecast. From the doorway. Every evening at six.</div></div>
+      <div class="guide-row both"><div>Worse in November.</div><div>Worse in November.</div></div>
+    </div>
+
+    <figure class="plate reveal" style="margin-top:2.4rem">
+      <div class="plate-head">
+        <span class="no">Plate VI</span>
+        <span class="meta">Invoice &middot; retained &middot; framed</span>
+      </div>
+      <div class="plate-body">
+        <div class="invoice">
+          <div class="head">
+            <span class="biz">D. Coalhouse<small>Farrier &middot; 41 years &middot; marsh side</small></span>
+            <span>INV 2291<br>21 Nov</span>
+          </div>
+          <div class="lines">
+            <div class="line"><span>Call-out, Brackwater Lane</span><span>&pound;40.00</span></div>
+            <div class="line"><span>Shoeing &mdash; 1 horse &mdash; speculative</span><span>&pound;110.00</span></div>
+            <div class="line"><span>Trim &amp; balance, near fore (was going short)</span><span>&pound;20.00</span></div>
+            <div class="line"><span>Oats, own supply, not eaten, no charge</span><span>&pound;0.00</span></div>
+            <div class="line"><span>Materials &mdash; see note</span><span>&pound;10.00</span></div>
+          </div>
+          <div class="total"><span class="plaque" style="letter-spacing:.16em;font-size:.7rem;">Total due</span><span>&pound;180.00</span></div>
+          <p class="note">Nails went in. Nails stayed in. Wouldn't ask me where. &mdash; D.C.</p>
+        </div>
+      </div>
+      <figcaption><b>On the materials line.</b> I asked him what the ten pounds was for. He said "the nails." I asked where the nails were now. He looked at me for a long moment and then wrote "see note" on the invoice.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ==================== CLOSE ==================== -->
+  <section class="close reveal">
+    <span class="plaque" style="font-size:.62rem;color:var(--ink-3);letter-spacing:.2em;">Entry No. 047 &middot; 2 January &middot; final</span>
+    <p class="amend-line">Occupants: <s>1 living &middot; 1 contested</s> <b>2</b></p>
+    <p>Nothing to report. Slept through. Woke to prints in the flour going out of the kitchen, as always, never in. I have stopped finding that sinister and started finding it a bit rude that she never says hello on the way past.</p>
+    <p>I have amended the front of this ledger. It took me three months and I did it in ink.</p>
+    <p class="hand" style="font-size:1.25rem;">Volume II begins tomorrow. She's already standing where I keep it.</p>
+  </section>
+
+  <div class="colophon">
+    <span>14 Brackwater Lane &middot; Vol. I of &#8263;</span>
+    <span>Kept in ink &middot; counter-signed in flour</span>
+  </div>
+</main>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- film grain, generated once ---------------- */
+  function grain(){
+    var s=180, c=document.createElement("canvas");
+    c.width=c.height=s;
+    var x=c.getContext("2d"), img=x.createImageData(s,s), d=img.data;
+    for(var i=0;i<d.length;i+=4){
+      var v=200+Math.random()*55|0;
+      d[i]=d[i+1]=d[i+2]=v;
+      d[i+3]=Math.random()*90|0;
+    }
+    x.putImageData(img,0,0);
+    document.documentElement.style.setProperty("--grain-src","url("+c.toDataURL()+")");
+  }
+
+  /* ---------------- thermal plate ---------------- */
+  var HORSE="M38 42C42 33 47 27 54 22L56 20L58 15L61 21C69 25 78 32 86 40C104 38 120 40 132 39C148 38 162 42 170 54C174 64 172 76 164 88C161 93 158 98 155 104L152 121L156 133L147 133L145 121L147 102C148 94 149 90 150 86C128 94 104 94 88 84L86 106L83 123L87 133L78 133L76 123L79 104L81 86C76 74 72 64 70 56C66 47 61 44 54 45C48 47 43 50 39 52C34 53 33 47 38 42Z";
+  var HORSE_TAIL="M167 48C182 60 192 86 186 118C184 94 178 68 164 58Z";
+
+  // deterministic pseudo-random so the plate looks the same every visit
+  var seed=20251012;
+  function rnd(){ seed=(seed*1664525+1013904223)%4294967296; return seed/4294967296; }
+
+  function thermal(){
+    var cv=document.getElementById("thermal"); if(!cv) return;
+    var W=cv.width,H=cv.height,g=cv.getContext("2d");
+
+    // 1. warm field
+    g.fillStyle="#4a4a4a"; g.fillRect(0,0,W,H);
+    var warm=[[120,340,190,255],[760,150,150,235],[700,300,110,215],[430,60,220,150],[60,80,180,140]];
+    g.globalCompositeOperation="lighter";
+    warm.forEach(function(w){
+      var r=g.createRadialGradient(w[0],w[1],0,w[0],w[1],w[2]);
+      r.addColorStop(0,"rgba("+w[3]+","+w[3]+","+w[3]+",1)");
+      r.addColorStop(1,"rgba(0,0,0,0)");
+      g.fillStyle=r; g.fillRect(0,0,W,H);
+    });
+    for(var i=0;i<70;i++){
+      var x=rnd()*W,y=rnd()*H,rad=40+rnd()*120,a=.05+rnd()*.09;
+      var rg=g.createRadialGradient(x,y,0,x,y,rad);
+      rg.addColorStop(0,"rgba(255,255,255,"+a+")"); rg.addColorStop(1,"rgba(0,0,0,0)");
+      g.fillStyle=rg; g.fillRect(0,0,W,H);
+    }
+    g.globalCompositeOperation="source-over";
+
+    // 2. the cold horse, standing square in the middle of the room
+    g.save();
+    if("filter" in g) g.filter="blur(9px)";
+    g.translate(150,44);
+    g.scale(2.6,2.6);
+    g.fillStyle="rgba(0,0,0,.95)";
+    g.fill(new Path2D(HORSE));
+    g.fill(new Path2D(HORSE_TAIL));
+    g.restore();
+    g.filter="none";
+
+    // 3. quantise into thermal bands
+    var im=g.getImageData(0,0,W,H),d=im.data;
+    var ramp=[[9,16,44],[16,32,74],[16,58,96],[14,86,104],[16,112,102],[42,134,84],[96,152,66],[158,164,56],[206,158,52],[228,132,54],[236,104,66],[244,150,120],[250,208,180]];
+    for(var p=0;p<d.length;p+=4){
+      var v=d[p]/255;
+      var band=Math.min(ramp.length-1,Math.max(0,Math.round(v*(ramp.length-1))));
+      var c=ramp[band];
+      var n=(rnd()-.5)*13;
+      d[p]=c[0]+n; d[p+1]=c[1]+n; d[p+2]=c[2]+n; d[p+3]=255;
+    }
+    g.putImageData(im,0,0);
+
+    // 4. scan lines + HUD
+    g.fillStyle="rgba(0,0,0,.14)";
+    for(var y2=0;y2<H;y2+=3) g.fillRect(0,y2,W,1);
+
+    g.strokeStyle="rgba(255,255,255,.55)"; g.lineWidth=1.5;
+    [[24,24,1,0],[24,24,0,1],[W-24,24,-1,0],[W-24,24,0,1],[24,H-24,1,0],[24,H-24,0,-1],[W-24,H-24,-1,0],[W-24,H-24,0,-1]]
+      .forEach(function(t){ g.beginPath(); g.moveTo(t[0],t[1]); g.lineTo(t[0]+t[2]*22,t[1]+t[3]*22); g.stroke(); });
+
+    g.font='13px "American Typewriter","Courier New",monospace';
+    g.fillStyle="rgba(255,255,255,.82)";
+    g.fillText("03:14:07   KITCHEN   EMIS 0.95",30,44);
+    g.fillText("MIN  4.1\u00b0C",30,H-30);
+    g.textAlign="right";
+    g.fillText("MAX 21.6\u00b0C",W-30,44);
+    g.fillStyle="rgba(160,235,240,.95)";
+    g.fillText("SUBJECT  4.1\u00b0C  \u2192",W-30,H-30);
+    g.textAlign="left";
+
+    // pointer from the readout to the cold region
+    g.strokeStyle="rgba(160,235,240,.85)"; g.lineWidth=1.5;
+    g.beginPath(); g.moveTo(W-200,H-35); g.lineTo(W-300,H-118); g.stroke();
+    g.beginPath(); g.moveTo(W-300,H-118); g.lineTo(W-288,H-112); g.moveTo(W-300,H-118); g.lineTo(W-296,H-104); g.stroke();
+  }
+
+  /* ---------------- spectral index chart ---------------- */
+  function chart(){
+    var svg=document.getElementById("chart"); if(!svg) return;
+    var W=900,H=360,L=54,R=34,T=76,B=54;
+    svg.setAttribute("viewBox","0 0 "+W+" "+H);
+    var days=83, vals=[];
+    for(var i=0;i<days;i++){
+      var base=14+26*Math.sin(i/13)+ i*0.28;
+      var wobble=(Math.sin(i*2.7)*7)+(Math.cos(i*1.3)*5);
+      var v=base+wobble;
+      if(i===34) v=98;                 // 15 Nov, microwave
+      if(i===35) v=12;                 // silence after
+      if(i===36) v=9;
+      if(i===40) v=35;                 // farrier
+      if(i===68) v=93;                 // 19 Dec, storm
+      if(i>72) v=Math.max(6,22-(i-72)*1.6+Math.sin(i)*3);
+      vals.push(Math.max(4,Math.min(100,v)));
+    }
+    var X=function(i){ return L+(W-L-R)*(i/(days-1)); };
+    var Y=function(v){ return H-B-(H-T-B)*(v/100); };
+
+    var ns="http://www.w3.org/2000/svg", out=[];
+    function el(t,a,txt){
+      var e=document.createElementNS(ns,t);
+      for(var k in a) e.setAttribute(k,a[k]);
+      if(txt!=null) e.textContent=txt;
+      return e;
+    }
+    // grid
+    [0,25,50,75,100].forEach(function(v){
+      out.push(el("line",{x1:L,x2:W-R,y1:Y(v),y2:Y(v),stroke:"var(--edge)","stroke-width":1}));
+      out.push(el("text",{x:L-10,y:Y(v)+4,"text-anchor":"end",class:"ax"},v));
+    });
+    // months
+    [[0,"12 Oct"],[20,"Nov"],[50,"Dec"],[81,"Jan"]].forEach(function(m,i,a){
+      var last=i===a.length-1;
+      out.push(el("line",{x1:X(m[0]),x2:X(m[0]),y1:T-6,y2:H-B,stroke:"var(--edge)","stroke-width":1,"stroke-dasharray":"3 6"}));
+      out.push(el("text",{x:X(m[0])+(last?-6:6),y:H-B+20,class:"ax","text-anchor":last?"end":"start"},m[1]));
+    });
+    // area + line
+    var dArea="M"+X(0)+","+(H-B), dLine="";
+    vals.forEach(function(v,i){
+      dArea+=" L"+X(i).toFixed(1)+","+Y(v).toFixed(1);
+      dLine+=(i?" L":"M")+X(i).toFixed(1)+","+Y(v).toFixed(1);
+    });
+    dArea+=" L"+X(days-1)+","+(H-B)+" Z";
+    out.push(el("path",{d:dArea,fill:"var(--cold)",opacity:".13"}));
+    out.push(el("path",{d:dLine,fill:"none",stroke:"var(--cold)","stroke-width":2,"stroke-linejoin":"round"}));
+
+    // annotations \u2014 leaders run up into the reserved band above the plot
+    [[34,"Microwave. One beep.",T-40],[68,"Storm. Clause 4 struck.",T-14]]
+    .forEach(function(a){
+      var i=a[0],v=vals[i],ty=a[2],below=ty>Y(v);
+      out.push(el("line",{x1:X(i),x2:X(i),y1:Y(v)+(below?7:-7),y2:ty+(below?-14:10),stroke:"var(--rule)","stroke-width":1.5}));
+      out.push(el("circle",{cx:X(i),cy:Y(v),r:4,fill:"var(--rule)"}));
+      var end=X(i)>W-250;
+      out.push(el("text",{x:X(i)+(end?-9:9),y:ty,class:"ann","text-anchor":end?"end":"start"},a[1]));
+    });
+    // settled band
+    out.push(el("rect",{x:X(73),y:T,width:X(days-1)-X(73),height:H-T-B,fill:"var(--lantern)",opacity:".08"}));
+    out.push(el("text",{x:X(days-1)-6,y:T+18,class:"ann warm","text-anchor":"end"},"Settled"));
+
+    out.push(el("text",{x:L,y:26,class:"ax"},"Spectral index, nightly (0\u2013100)"));
+    out.forEach(function(n){ svg.appendChild(n); });
+  }
+
+  /* ---------------- reveals ---------------- */
+  function reveals(){
+    var items=document.querySelectorAll(".reveal,.hoof-walk");
+    if(!("IntersectionObserver" in window)) return;   // leave everything visible
+    document.documentElement.classList.add("js-motion");
+    var io=new IntersectionObserver(function(es){
+      es.forEach(function(e){
+        if(e.isIntersecting){ e.target.classList.add("seen"); io.unobserve(e.target); }
+      });
+    },{rootMargin:"0px 0px -8% 0px",threshold:.08});
+    items.forEach(function(n){ io.observe(n); });
+  }
+
+  grain(); thermal(); chart(); reveals();
+})();
+</script>
+
+<style>
+  #chart .ax{ font-family:var(--f-data); font-size:11px; letter-spacing:1.2px; text-transform:uppercase; fill:var(--ink-3); }
+  #chart .ann{ font-family:var(--f-data); font-size:12.5px; letter-spacing:.4px; fill:var(--rule); }
+  #chart .ann.warm{ fill:var(--lantern); }
+  #plate-chart svg{ padding:.4rem; }
+</style>
+
+</body></html>

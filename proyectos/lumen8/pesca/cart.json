@@ -1,0 +1,17 @@
+{
+  "id": "pesca",
+  "title": "Pesca 16-bit",
+  "entry": "index.html",
+  "resolution": [256, 224],
+  "controls": {
+    "left/right": "ArrowLeft/ArrowRight (A/D)",
+    "A": "Space (Z, J)",
+    "B": "X (K)",
+    "start": "Enter",
+    "select": "C",
+    "music": "M"
+  },
+  "gamepad": true,
+  "license": "GPL-3.0 (audio: SuperTux, see CREDITS.md)",
+  "basedOn": "https://github.com/damiancc79-cpu/pesca-2.5d"
+}

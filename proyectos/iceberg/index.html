@@ -1,0 +1,1686 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}</style></head><body>
+<title>Iceberg Chart &#x2014; a 3D sounding editor</title>
+
+<style>
+/* ============================================================
+   SOUNDING &#x2014; a bathymetric survey identity
+   color   : cold paper / sounding teal / marker orange
+   type    : condensed grotesque (legend) + old-style serif (hydronyms) + mono (soundings)
+   layout  : cutaway plate on the left, survey log rail on the right
+   ============================================================ */
+
+:root{
+  --paper:      #E6EDEE;
+  --paper-2:    #DAE4E6;
+  --panel:      #F7FAFA;
+  --panel-2:    #EDF3F3;
+  --line:       #C2D2D6;
+  --line-soft:  #D8E2E4;
+  --ink:        #0B2028;
+  --ink-2:      #3D5661;
+  --ink-3:      #6E858F;
+  --accent:     #0E7C86;
+  --accent-2:   #CFE6E7;
+  --marker:     #C64B22;
+  --sky-1:      #C7DAE0;
+  --sky-2:      #E9F1F2;
+  --sea-1:      #A6C9D5;
+  --sea-2:      #163F57;
+  --sea-deep:   #123B52;
+  --grid:       rgba(10,32,41,.17);
+  --shaft:      rgba(255,255,255,.11);
+  --plate-edge: rgba(10,32,41,.14);
+  --shadow:     0 1px 2px rgba(10,32,41,.05), 0 8px 24px -18px rgba(10,32,41,.5);
+
+  /* the polar horizon */
+  --shelf:      #BED4DD;
+  --shelf-top:  #F8FBFC;
+  --rock:       #77868E;
+  --aurora-a:   #7FD8C8;
+  --aurora-b:   #9FB6E8;
+  --lamp:       #FFF6E4;
+  --star:       #FFFFFF;
+  --haze:       #F0F6F7;
+  --on-deep:    #EDF5F6;   /* the controls sit over deep water in both themes */
+
+  --font-display: "Avenir Next Condensed","Roboto Condensed","Arial Narrow","Helvetica Neue",sans-serif;
+  --font-body:    "Iowan Old Style","Charter","Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+  --font-mono:    ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --paper:      #040E13;
+    --paper-2:    #020809;
+    --panel:      #091A21;
+    --panel-2:    #0C2028;
+    --line:       #1A343F;
+    --line-soft:  #132A33;
+    --ink:        #DCE9EB;
+    --ink-2:      #92ADB5;
+    --ink-3:      #5C7984;
+    --accent:     #45C8C6;
+    --accent-2:   #0E2E33;
+    --marker:     #FF7B47;
+    --sky-1:      #06161E;
+    --sky-2:      #0B2530;
+    --sea-1:      #0A2F42;
+    --sea-2:      #010608;
+    --sea-deep:   #04141F;
+    --grid:       rgba(180,220,229,.14);
+    --shaft:      rgba(150,225,235,.055);
+    --plate-edge: rgba(150,200,212,.13);
+    --shadow:     0 1px 2px rgba(0,0,0,.4), 0 8px 24px -18px rgba(0,0,0,.9);
+
+    --shelf:      #0E2733;
+    --shelf-top:  #376071;
+    --rock:       #08161D;
+    --aurora-a:   #4FE0A6;
+    --aurora-b:   #7E6BD8;
+    --lamp:       #DDEAF3;
+    --star:       #D2E6EE;
+    --haze:       #0D2733;
+    --on-deep:    #DCE9EB;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="light"]{
+  --paper:#E6EDEE; --paper-2:#DAE4E6; --panel:#F7FAFA; --panel-2:#EDF3F3;
+  --line:#C2D2D6; --line-soft:#D8E2E4; --ink:#0B2028; --ink-2:#3D5661; --ink-3:#6E858F;
+  --accent:#0E7C86; --accent-2:#CFE6E7; --marker:#C64B22;
+  --sky-1:#C7DAE0; --sky-2:#E9F1F2; --sea-1:#A6C9D5; --sea-2:#163F57; --sea-deep:#123B52;
+  --grid:rgba(10,32,41,.17); --shaft:rgba(255,255,255,.11); --plate-edge:rgba(10,32,41,.14);
+  --shadow:0 1px 2px rgba(10,32,41,.05),0 8px 24px -18px rgba(10,32,41,.5);
+  --shelf:#BED4DD; --shelf-top:#F8FBFC; --rock:#77868E;
+  --aurora-a:#7FD8C8; --aurora-b:#9FB6E8; --lamp:#FFF6E4; --star:#FFFFFF; --haze:#F0F6F7; --on-deep:#EDF5F6;
+  color-scheme: light;
+}
+:root[data-theme="dark"]{
+  --paper:#040E13; --paper-2:#020809; --panel:#091A21; --panel-2:#0C2028;
+  --line:#1A343F; --line-soft:#132A33; --ink:#DCE9EB; --ink-2:#92ADB5; --ink-3:#5C7984;
+  --accent:#45C8C6; --accent-2:#0E2E33; --marker:#FF7B47;
+  --sky-1:#06161E; --sky-2:#0B2530; --sea-1:#0A2F42; --sea-2:#010608; --sea-deep:#04141F;
+  --grid:rgba(180,220,229,.14); --shaft:rgba(150,225,235,.055); --plate-edge:rgba(150,200,212,.13);
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -18px rgba(0,0,0,.9);
+  --shelf:#0E2733; --shelf-top:#376071; --rock:#08161D;
+  --aurora-a:#4FE0A6; --aurora-b:#7E6BD8; --lamp:#DDEAF3; --star:#D2E6EE; --haze:#0D2733; --on-deep:#DCE9EB;
+  color-scheme: dark;
+}
+
+*{ box-sizing:border-box; }
+
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--font-body);
+  font-size:15px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+
+/* ---------- shell: the plate is the whole interface ---------- */
+.app{ position:relative; height:100dvh; min-height:420px; }
+
+.stage{ position:absolute; inset:0; overflow:hidden; background:var(--sky-2); }
+#plate{ display:block; width:100%; height:100%; touch-action:none; cursor:grab; }
+#plate:active{ cursor:grabbing; }
+#plate:focus-visible{ outline:2px solid var(--accent); outline-offset:-3px; }
+
+/* ---------- type set straight onto the chart ---------- */
+.ghost{
+  position:absolute; margin:0; padding:0;
+  background:none; border:0; outline:none;
+  font-family:var(--font-display); font-weight:600; text-transform:uppercase;
+  caret-color:var(--accent);
+}
+.ghost.sub{
+  font-family:var(--font-body); font-weight:400; font-style:italic;
+  text-transform:none; letter-spacing:0;
+}
+
+/* ---------- controls: hairlines, never boxes ---------- */
+/* the open editor pushes the controls aside rather than burying them */
+.tools{
+  position:absolute;
+  right:calc(15px + var(--inset,0px)); bottom:calc(13px + var(--vinset,0px));
+  display:flex; align-items:center; gap:1px;
+  transition:right .3s cubic-bezier(.4,0,.2,1), bottom .3s cubic-bezier(.4,0,.2,1);
+}
+.tool{
+  min-width:26px; height:26px; padding:0 8px;
+  display:grid; place-items:center;
+  background:none; border:0; border-radius:2px; cursor:pointer;
+  color:var(--on-deep); opacity:.5;
+  font-family:var(--font-mono); font-size:12px; line-height:1;
+  text-shadow:0 1px 2px rgba(0,0,0,.4);
+  transition:opacity .15s, background .15s;
+}
+.tool.txt{ font-size:9px; letter-spacing:.15em; text-transform:uppercase; }
+.tool:hover{ opacity:1; background:color-mix(in srgb, var(--on-deep) 16%, transparent); }
+.tool[aria-expanded="true"]{ opacity:1; background:color-mix(in srgb, var(--on-deep) 20%, transparent); }
+.tool:focus-visible{ opacity:1; outline:1px solid var(--accent); outline-offset:1px; }
+.rule{ width:1px; height:13px; background:var(--on-deep); opacity:.28; margin:0 6px; }
+
+.hint{
+  position:absolute; right:calc(15px + var(--inset,0px)); top:13px;
+  margin:0; max-width:56vw; text-align:right;
+  font-family:var(--font-mono); font-size:9px; letter-spacing:.13em; text-transform:uppercase;
+  color:var(--ink); opacity:.32; pointer-events:none; transition:opacity .6s;
+}
+.hint.gone{ opacity:0; }
+
+/* ---------- one stratum at a time ---------- */
+.card{
+  position:absolute; top:0; right:0; bottom:0; width:min(316px, 86vw);
+  display:flex; flex-direction:column;
+  padding:22px 22px 16px;
+  background:color-mix(in srgb, var(--panel) 86%, transparent);
+  backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+  border-left:1px solid var(--line-soft);
+  overflow-y:auto;
+  transition:transform .3s cubic-bezier(.4,0,.2,1), opacity .22s, visibility 0s;
+}
+.card:not(.open){
+  transform:translateX(101%); opacity:0; pointer-events:none;
+  visibility:hidden; transition-delay:0s, 0s, .3s;
+}
+
+.card-head{ display:flex; align-items:center; gap:9px; }
+.card-sw{ width:10px; height:10px; flex:none; border-radius:1px; background:var(--c,#888); box-shadow:inset 0 0 0 1px rgba(0,0,0,.2); }
+
+.mlabel{ font-family:var(--font-mono); font-size:8.5px; letter-spacing:.2em; text-transform:uppercase; color:var(--ink-3); }
+
+.i{
+  width:100%; min-width:0; font:inherit; color:var(--ink);
+  background:none; border:0; border-bottom:1px solid transparent;
+  padding:5px 0; outline:none; border-radius:0;
+}
+.i:hover{ border-bottom-color:var(--line-soft); }
+.i:focus{ border-bottom-color:var(--accent); }
+.i.name{ font-family:var(--font-display); font-size:15px; font-weight:600; letter-spacing:.05em; text-transform:uppercase; }
+.i.depth{ font-family:var(--font-mono); font-size:11px; letter-spacing:.03em; color:var(--ink-2); }
+
+.entries{ display:flex; flex-direction:column; margin-top:16px; }
+.entry-row{ display:grid; grid-template-columns:minmax(0,1fr) 20px; align-items:center; gap:4px; }
+.entry-row .x{ opacity:0; }
+.entry-row:hover .x, .entry-row:focus-within .x{ opacity:.55; }
+
+.x{
+  width:20px; height:20px; flex:none; display:grid; place-items:center;
+  padding:0; background:none; border:0; cursor:pointer;
+  color:var(--ink-3); font-size:11px; line-height:1;
+  transition:opacity .15s, color .15s;
+}
+.x:hover{ color:var(--marker); opacity:1; }
+.x:focus-visible{ opacity:1; outline:1px solid var(--accent); outline-offset:1px; }
+.card-close{ margin-left:auto; opacity:.45; }
+
+.ghostbtn{
+  background:none; border:0; padding:5px 7px; cursor:pointer; border-radius:2px;
+  font-family:var(--font-mono); font-size:9px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--ink-2); opacity:.72;
+  transition:opacity .15s, color .15s, background .15s;
+}
+.ghostbtn:hover{ opacity:1; color:var(--accent); background:color-mix(in srgb, var(--ink) 7%, transparent); }
+.ghostbtn:focus-visible{ opacity:1; outline:1px solid var(--accent); outline-offset:1px; }
+.ghostbtn:disabled{ opacity:.22; cursor:not-allowed; background:none; color:var(--ink-2); }
+.ghostbtn.danger:hover{ color:var(--marker); }
+.start{ align-self:flex-start; margin-top:8px; }
+
+.card-acts{ margin-top:auto; padding-top:20px; display:flex; align-items:center; gap:1px; }
+.spacer{ flex:1; }
+.inline{ display:flex; align-items:center; gap:1px; flex-wrap:wrap; }
+
+/* ---------- options ---------- */
+.pop{
+  position:absolute;
+  right:calc(15px + var(--inset,0px)); bottom:calc(46px + var(--vinset,0px));
+  width:min(268px, 88vw);
+  display:flex; flex-direction:column; gap:15px; padding:15px;
+  background:color-mix(in srgb, var(--panel) 92%, transparent);
+  backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+  border:1px solid var(--line-soft); border-radius:3px;
+  box-shadow:var(--shadow);
+}
+.pop:not(.open){ display:none; }
+.pop-row{ display:flex; flex-direction:column; gap:7px; }
+
+.ramps{ display:grid; grid-template-columns:repeat(3,1fr); gap:5px; }
+.ramp{
+  height:26px; padding:0; position:relative; overflow:hidden; cursor:pointer;
+  border:1px solid transparent; border-radius:2px; opacity:.6;
+  transition:opacity .15s, border-color .15s;
+}
+.ramp:hover{ opacity:1; }
+.ramp[aria-pressed="true"]{ opacity:1; border-color:var(--accent); }
+.ramp span{
+  position:absolute; inset:auto 0 0 0; padding:1px 0 2px;
+  font-family:var(--font-mono); font-size:7.5px; letter-spacing:.1em; text-transform:uppercase;
+  color:#fff; background:rgba(6,20,28,.52); text-align:center;
+}
+.ramp:focus-visible{ outline:1px solid var(--accent); outline-offset:1px; }
+
+.poles{ display:grid; grid-template-columns:1fr 1fr; gap:5px; }
+.pole{
+  padding:7px 9px; text-align:left; cursor:pointer;
+  background:none; border:1px solid var(--line-soft); border-radius:2px;
+  color:var(--ink-2);
+  font-family:var(--font-display); font-size:11px; font-weight:600;
+  letter-spacing:.08em; text-transform:uppercase;
+  transition:border-color .15s, color .15s;
+}
+.pole:hover{ border-color:var(--accent); color:var(--ink); }
+.pole[aria-pressed="true"]{ border-color:var(--accent); color:var(--accent); }
+.pole:focus-visible{ outline:1px solid var(--accent); outline-offset:1px; }
+
+.seedline{ font-family:var(--font-mono); font-size:9px; letter-spacing:.1em; color:var(--ink-3); font-variant-numeric:tabular-nums; }
+
+.json{
+  width:100%; height:96px; resize:vertical;
+  font-family:var(--font-mono); font-size:10px; line-height:1.5;
+  color:var(--ink-2); background:color-mix(in srgb, var(--ink) 5%, transparent);
+  border:1px solid var(--line-soft); border-radius:2px; padding:7px;
+}
+.json:focus{ outline:none; border-color:var(--accent); }
+
+.toast{
+  position:fixed; left:50%; bottom:22px; transform:translate(-50%,12px);
+  padding:7px 15px; background:var(--ink); color:var(--paper);
+  font-family:var(--font-mono); font-size:9.5px; letter-spacing:.14em; text-transform:uppercase;
+  border-radius:2px; opacity:0; pointer-events:none;
+  transition:opacity .22s, transform .22s; z-index:20;
+}
+.toast.on{ opacity:1; transform:translate(-50%,0); }
+
+.vh{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+
+@media (max-width:640px){
+  .card{
+    top:auto; left:0; right:0; bottom:0; width:auto; max-height:64dvh;
+    border-left:0; border-top:1px solid var(--line-soft); padding:16px 16px 12px;
+  }
+  .card:not(.open){ transform:translateY(101%); }
+  .pop{ left:15px; right:15px; width:auto; }
+  .hint{ display:none; }
+  .tool.txt{ font-size:8.5px; letter-spacing:.1em; padding:0 6px; }
+}
+
+@media (prefers-reduced-motion:reduce){
+  *{ animation-duration:.001ms !important; transition-duration:.001ms !important; }
+}
+</style>
+
+<div class="app">
+  <section class="stage">
+    <canvas id="plate" tabindex="0" role="img" aria-label="Three-dimensional iceberg chart"></canvas>
+
+    <input class="ghost" id="g-title" hidden maxlength="90" aria-label="Chart title" spellcheck="false">
+    <input class="ghost sub" id="g-sub" hidden maxlength="140" aria-label="Chart subtitle">
+
+    <p class="hint" id="hint">Drag to orbit &#x00B7; click a stratum to edit</p>
+
+    <div class="tools">
+      <button class="tool" id="zout" title="Zoom out" aria-label="Zoom out">&#x2212;</button>
+      <button class="tool" id="zin" title="Zoom in" aria-label="Zoom in">+</button>
+      <button class="tool" id="zres" title="Reset view" aria-label="Reset view">&#x2316;</button>
+      <span class="rule"></span>
+      <button class="tool txt" id="add" title="Add a stratum at the keel">+ Stratum</button>
+      <button class="tool txt" id="opts" aria-expanded="false" aria-controls="pop">Options</button>
+      <button class="tool txt" id="png" title="Export the chart as a PNG">Export</button>
+    </div>
+
+    <div class="pop" id="pop" role="dialog" aria-label="Chart options">
+      <div class="pop-row">
+        <span class="mlabel">Depth tint</span>
+        <div class="ramps" id="ramps"></div>
+      </div>
+      <div class="pop-row">
+        <span class="mlabel">Horizon</span>
+        <div class="poles" id="poles"></div>
+      </div>
+      <div class="pop-row">
+        <span class="mlabel">Silhouette</span>
+        <div class="inline">
+          <button class="ghostbtn" id="reseed">New shape</button>
+          <span class="spacer"></span>
+          <span class="seedline" id="seedout">SEED 0000</span>
+        </div>
+      </div>
+      <div class="pop-row">
+        <span class="mlabel">Data</span>
+        <div class="inline">
+          <button class="ghostbtn" id="dljson">Download</button>
+          <button class="ghostbtn" id="copy">Copy</button>
+          <button class="ghostbtn" id="showjson" aria-expanded="false">Paste</button>
+          <span class="spacer"></span>
+          <button class="ghostbtn danger" id="reset">Reset</button>
+        </div>
+        <textarea class="json" id="json" spellcheck="false" aria-label="Chart data as JSON" hidden></textarea>
+        <button class="ghostbtn start" id="apply" hidden>Apply</button>
+      </div>
+    </div>
+
+    <aside class="card" id="card" aria-label="Stratum editor">
+      <div class="card-head">
+        <span class="card-sw" id="c-sw"></span>
+        <input class="i name" id="c-name" maxlength="44" aria-label="Stratum name">
+        <button class="x card-close" id="c-close" aria-label="Close editor">&#x2715;</button>
+      </div>
+      <input class="i depth" id="c-depth" maxlength="26" placeholder="Depth" aria-label="Depth label">
+      <div class="entries" id="c-entries"></div>
+      <button class="ghostbtn start" id="c-add">+ Entry</button>
+      <div class="card-acts">
+        <button class="ghostbtn" id="c-up" title="Move up" aria-label="Move stratum up">&#x2191;</button>
+        <button class="ghostbtn" id="c-down" title="Move down" aria-label="Move stratum down">&#x2193;</button>
+        <span class="spacer"></span>
+        <button class="ghostbtn danger" id="c-del">Delete</button>
+      </div>
+    </aside>
+  </section>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<p class="vh" id="a11y" aria-live="polite"></p>
+
+<script>
+(() => {
+"use strict";
+
+/* ============================================================ 1 | helpers */
+const clamp = (v,a,b) => v<a?a:v>b?b:v;
+const lerp  = (a,b,t) => a+(b-a)*t;
+const smooth = (e0,e1,x) => { const t = clamp((x-e0)/(e1-e0),0,1); return t*t*(3-2*t); };
+
+function hexRgb(h){
+  h = h.trim();
+  if(h[0] === "#") h = h.slice(1);
+  if(h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+  const n = parseInt(h,16);
+  return [ (n>>16)&255, (n>>8)&255, n&255 ];
+}
+const css = c => "rgb("+(c[0]|0)+","+(c[1]|0)+","+(c[2]|0)+")";
+const cssa = (c,a) => "rgba("+(c[0]|0)+","+(c[1]|0)+","+(c[2]|0)+","+a+")";
+const mix = (a,b,t) => [ lerp(a[0],b[0],t), lerp(a[1],b[1],t), lerp(a[2],b[2],t) ];
+const lum = c => (0.2126*c[0] + 0.7152*c[1] + 0.0722*c[2]) / 255;
+
+function rampAt(stops, t){
+  t = clamp(t,0,1);
+  const p = t*(stops.length-1), i = Math.min(stops.length-2, Math.floor(p));
+  return mix(stops[i], stops[i+1], p-i);
+}
+function prng(seed){
+  let a = seed >>> 0;
+  return () => { a = (a + 0x6D2B79F5)|0; let t = Math.imul(a ^ (a>>>15), 1|a);
+    t = (t + Math.imul(t ^ (t>>>7), 61|t)) ^ t; return ((t ^ (t>>>14))>>>0)/4294967296; };
+}
+
+/* ============================================================ 2 | ramps + data */
+const RAMPS = {
+  sounding: { label:"Sounding", stops:["#F3F8F9","#C4E2E8","#7CC2CF","#3E96AC","#25708D","#16496C","#0C2B4A","#061731"] },
+  glacier:  { label:"Glacier",  stops:["#FBFDFD","#DFEDF0","#B5D4DD","#87B4C3","#5C8DA1","#3D6579","#274253","#16252F"] },
+  nightfall:{ label:"Nightfall",stops:["#F6F2F8","#D8D0E7","#AA9ECC","#7B6DAE","#57478B","#3A2D67","#231B45","#120D28"] }
+};
+Object.values(RAMPS).forEach(r => r.rgb = r.stops.map(hexRgb));
+
+const EXAMPLE = {
+  title: "The Ocean, All the Way Down",
+  subtitle: "A sounding chart of what lives beneath the surface",
+  ramp: "sounding",
+  scene: "antarctic",
+  seed: 4173,
+  tiers: [
+    { name:"The Surface",    depth:"0 m",
+      items:["Whitecaps","Gulls","Sunlight"] },
+    { name:"Sunlit Zone",    depth:"0 \u2013 200 m",
+      items:["Coral reefs","Plankton blooms","Kelp forests","Most fish you can name"] },
+    { name:"Twilight Zone",  depth:"200 \u2013 1 000 m",
+      items:["Lanternfish","The nightly vertical migration","A false seafloor on wartime sonar"] },
+    { name:"Midnight Zone",  depth:"1 000 \u2013 4 000 m",
+      items:["Anglerfish lures","Vampire squid","Whale falls"] },
+    { name:"The Abyss",      depth:"4 000 \u2013 6 000 m",
+      items:["Brine pools with shorelines","Tube worms at hydrothermal vents","Dumbo octopus"] },
+    { name:"Hadal Trenches", depth:"6 000 \u2013 11 000 m",
+      items:["Snailfish at 8 336 m","Amphipods with aluminium shells","Challenger Deep, 10 935 m"] },
+    { name:"Unsounded",      depth:"below the chart",
+      items:["The Bloop","Three quarters of the seabed, unmapped","Whatever is under the sediment"] }
+  ]
+};
+
+const MAX_TIERS = 12, MAX_ITEMS = 8, STORE = "sounding.iceberg.v1";
+
+let state = load() || structuredClone(EXAMPLE);
+const view = { yaw:-0.46, pitch:0.155, zoom:1 };
+let selected = -1;
+
+function load(){
+  try{
+    const raw = localStorage.getItem(STORE);
+    if(!raw) return null;
+    const d = sanitize(JSON.parse(raw));
+    return d.tiers.length ? d : null;
+  }catch(e){ return null; }
+}
+function save(){
+  try{ localStorage.setItem(STORE, JSON.stringify(state)); }catch(e){}
+}
+function sanitize(d){
+  const out = {
+    title: String(d && d.title || "Untitled chart").slice(0,90),
+    subtitle: String(d && d.subtitle || "").slice(0,140),
+    ramp: RAMPS[d && d.ramp] ? d.ramp : "sounding",
+    scene: (d && d.scene) === "arctic" ? "arctic" : "antarctic",
+    seed: Number.isFinite(d && d.seed) ? (d.seed|0) : 4173,
+    tiers: []
+  };
+  const src = Array.isArray(d && d.tiers) ? d.tiers : [];
+  for(const t of src.slice(0, MAX_TIERS)){
+    out.tiers.push({
+      name: String(t && t.name || "Stratum").slice(0,44),
+      depth: String(t && t.depth || "").slice(0,26),
+      items: (Array.isArray(t && t.items) ? t.items : []).slice(0, MAX_ITEMS).map(s => String(s).slice(0,64))
+    });
+  }
+  if(out.tiers.length < 2) out.tiers = structuredClone(EXAMPLE.tiers);
+  return out;
+}
+
+/* ============================================================ 3 | mesh */
+const SEG = 18;
+let mesh = null;
+
+function buildMesh(){
+  const T = state.tiers, n = T.length;
+  const rnd = prng(state.seed);
+  const ph = Array.from({length:7}, () => rnd()*Math.PI*2);
+
+  /* band heights - a stratum with more entries takes more of the water column */
+  const topH = clamp(0.44 + 0.26*T[0].items.length, 0.66, 1.65);
+  const bands = [{ tier:0, y0:topH, y1:0 }];
+  let y = 0;
+  for(let i=1;i<n;i++){
+    const h = 0.50 + 0.30*T[i].items.length;
+    bands.push({ tier:i, y0:y, y1:y-h });
+    y -= h;
+  }
+  const bottom = y || -1;
+  const span = topH - bottom;
+  const uw = topH/span;
+
+  /* the berg keeps its proportions however deep the chart runs */
+  const RS = clamp(0.46*span/2/1.05, 0.55, 3.4);
+
+  const radius = u => {
+    let r;
+    if(u <= uw){
+      const t = uw > 1e-6 ? u/uw : 1;
+      r = 0.055 + 0.565*Math.pow(t, 0.72);
+    }else{
+      const t = (u-uw)/Math.max(1e-6, 1-uw);
+      const grow  = 0.62 + 0.43*smooth(0,0.20,t);
+      const taper = 1 - 0.66*Math.pow(Math.max(0,(t-0.56)/0.44), 1.7);
+      r = grow*Math.max(0.055, taper);
+    }
+    return r*RS;
+  };
+  const offX = yy => 0.13*RS*Math.sin(0.55*yy + ph[4]);
+  const offZ = yy => 0.11*RS*Math.cos(0.47*yy + ph[5]);
+  const wob = (a,yy,crag) => 1
+    + crag*0.115*Math.sin(3*a + ph[0] + 0.80*yy)
+    + crag*0.070*Math.sin(5*a + ph[1] - 1.25*yy)
+    + crag*0.046*Math.sin(7*a + ph[2] + 1.95*yy)
+    + crag*0.028*Math.sin(11*a + ph[3] + 0.55*yy);
+
+  /* rings - exact ring at every band boundary, subdivided within */
+  const ys = [topH];
+  for(const b of bands){
+    const h = b.y0 - b.y1;
+    const steps = clamp(Math.round(h/0.24), 2, 7);
+    for(let s=1;s<=steps;s++) ys.push(b.y0 - h*s/steps);
+  }
+
+  const tierOfY = yy => {
+    for(const b of bands) if(yy <= b.y0 + 1e-9 && yy >= b.y1 - 1e-9) return b.tier;
+    return n-1;
+  };
+
+  const rings = [], radAt = [];
+  let maxR = 0.1;
+  for(const yy of ys){
+    const u = (topH - yy)/span;
+    const crag = yy > 0 ? 1.75 : 1;
+    const base = radius(u);
+    const ox = offX(yy), oz = offZ(yy);
+    const pts = [];
+    let rr = 0;
+    for(let k=0;k<SEG;k++){
+      const a = k/SEG*Math.PI*2;
+      const r = base*wob(a, yy, crag);
+      rr = Math.max(rr, r);
+      pts.push([ ox + r*Math.sin(a), yy, oz + r*Math.cos(a) ]);
+    }
+    maxR = Math.max(maxR, rr + Math.max(Math.abs(ox), Math.abs(oz)));
+    radAt.push({ y:yy, r:base, ox, oz });
+    rings.push(pts);
+  }
+
+  /* faces */
+  const faces = [];
+  const push = (verts, tier) => {
+    const e1 = [verts[1][0]-verts[0][0], verts[1][1]-verts[0][1], verts[1][2]-verts[0][2]];
+    const e2 = [verts[2][0]-verts[0][0], verts[2][1]-verts[0][1], verts[2][2]-verts[0][2]];
+    let nx = e1[1]*e2[2]-e1[2]*e2[1], ny = e1[2]*e2[0]-e1[0]*e2[2], nz = e1[0]*e2[1]-e1[1]*e2[0];
+    const L = Math.hypot(nx,ny,nz) || 1; nx/=L; ny/=L; nz/=L;
+    let cy = 0; for(const v of verts) cy += v[1];
+    faces.push({ v:verts, n:[nx,ny,nz], tier, y:cy/verts.length, j:faces.length });
+  };
+  const apex = [ radAt[0].ox, topH + 0.16, radAt[0].oz ];
+  for(let k=0;k<SEG;k++) push([ apex, rings[0][k], rings[0][(k+1)%SEG] ], 0);
+  for(let i=0;i<rings.length-1;i++){
+    const midY = (ys[i]+ys[i+1])/2, tier = tierOfY(midY);
+    for(let k=0;k<SEG;k++){
+      const k2 = (k+1)%SEG;
+      push([ rings[i][k], rings[i][k2], rings[i+1][k2], rings[i+1][k] ], tier);
+    }
+  }
+  const last = rings[rings.length-1];
+  const keel = [ radAt[radAt.length-1].ox, bottom - 0.10, radAt[radAt.length-1].oz ];
+  for(let k=0;k<SEG;k++) push([ keel, last[(k+1)%SEG], last[k] ], n-1);
+
+  /* per-face facet jitter, stable across frames */
+  const fr = prng(state.seed ^ 0x9E3779B9);
+  for(const f of faces) f.jit = (fr()-0.5)*0.055;
+
+  /* waterline ring (y = 0) */
+  let wl = rings[0], best = Infinity;
+  rings.forEach((r,i) => { const d = Math.abs(ys[i]); if(d < best){ best = d; wl = r; } });
+
+  mesh = { faces, bands, rings, ys, radAt, topH, bottom, span, maxR, waterRing:wl, radius, offX, offZ };
+}
+
+/* ============================================================ 4 | camera */
+function camera(W,H,box){
+  const fov = 0.62;
+  const f = (0.5*H)/Math.tan(fov/2);
+  const distV = f*mesh.span      / (box.h*0.94);
+  const distH = f*(2*mesh.maxR)  / (box.w*0.90);
+  const dist = Math.max(distV, distH, 2.2)/view.zoom;
+  const cY = (mesh.topH + mesh.bottom)/2;
+  const cx = box.x + box.w/2, cy = box.y + box.h/2;
+
+  const sy = Math.sin(view.yaw),   cyw = Math.cos(view.yaw);
+  const sp = Math.sin(view.pitch), cp  = Math.cos(view.pitch);
+  const C = [ dist*sy*cp, cY + dist*sp, dist*cyw*cp ];
+
+  function toCam(p){
+    const x = p[0]-C[0], y = p[1]-C[1], z = p[2]-C[2];
+    const x1 =  cyw*x - sy*z;
+    const z1 =  sy*x + cyw*z;
+    return [ x1, cp*y - sp*z1, sp*y + cp*z1 ];
+  }
+  function rot(v){
+    const x1 = cyw*v[0] - sy*v[2];
+    const z1 = sy*v[0] + cyw*v[2];
+    return [ x1, cp*v[1] - sp*z1, sp*v[1] + cp*z1 ];
+  }
+  function project(p){
+    const c = toCam(p), d = -c[2];
+    if(d < 0.05) return null;
+    return [ cx + f*c[0]/d, cy - f*c[1]/d, d ];
+  }
+  const axisY = yy => { const p = project([0,yy,0]); return p ? p[1] : cy; };
+  return { project, rot, axisY, f, dist, cx, cy };
+}
+
+/* ============================================================ 5 | tokens */
+let TK = null;
+function tokens(){
+  const s = getComputedStyle(document.documentElement);
+  const g = k => s.getPropertyValue(k).trim();
+  TK = {
+    sky1:hexRgb(g("--sky-1")), sky2:hexRgb(g("--sky-2")),
+    sea1:hexRgb(g("--sea-1")), sea2:hexRgb(g("--sea-2")), seaDeep:hexRgb(g("--sea-deep")),
+    ink:hexRgb(g("--ink")), marker:hexRgb(g("--marker")), accent:hexRgb(g("--accent")),
+    grid:g("--grid"), shaft:g("--shaft"),
+    shelf:hexRgb(g("--shelf")), shelfTop:hexRgb(g("--shelf-top")), rock:hexRgb(g("--rock")),
+    auroraA:hexRgb(g("--aurora-a")), auroraB:hexRgb(g("--aurora-b")),
+    lamp:hexRgb(g("--lamp")), star:hexRgb(g("--star")), haze:hexRgb(g("--haze"))
+  };
+  TK.night = lum(TK.sky1) < 0.35;   /* polar night decides aurora vs. midnight sun */
+}
+
+/* ---- text utilities ---- */
+function tracked(ctx, text, x, y, sp, align){
+  const chars = [...text];
+  let w = 0; for(const c of chars) w += ctx.measureText(c).width + sp;
+  w = Math.max(0, w - sp);
+  let px = align === "right" ? x-w : align === "center" ? x-w/2 : x;
+  for(const c of chars){ ctx.fillText(c, px, y); px += ctx.measureText(c).width + sp; }
+  return w;
+}
+function trackedW(ctx, text, sp){
+  let w = 0; for(const c of [...text]) w += ctx.measureText(c).width + sp;
+  return Math.max(0, w - sp);
+}
+function fitFont(ctx, text, maxW, size, min, make){
+  let s = size;
+  while(s > min){ ctx.font = make(s); if(ctx.measureText(text).width <= maxW) return text; s -= 1; }
+  ctx.font = make(min);
+  if(ctx.measureText(text).width <= maxW) return text;
+  let t = text;
+  while(t.length > 1 && ctx.measureText(t+"\u2026").width > maxW) t = t.slice(0,-1);
+  return t+"\u2026";
+}
+
+/* ============================================================ 5b | the polar horizon
+   Features live at fixed azimuths around the compass and are projected through the
+   same cylindrical mapping, so the whole world slides correctly as the berg is orbited. */
+let scene = null;
+
+function buildScene(){
+  const antarctic = state.scene !== "arctic";
+  const rnd = prng((state.seed*2654435761 ^ (antarctic ? 0x9E3779B9 : 0x51EDA7C3)) >>> 0);
+  const S = { antarctic, stars:[], curtains:[], wall:[], bergs:[], peaks:[], floes:[], lampTh:0 };
+
+  for(let i=0;i<420;i++)
+    S.stars.push({ th:rnd()*Math.PI*2, el:Math.pow(rnd(),0.75), r:0.35+rnd()*0.95, ph:rnd()*6.283, sp:0.5+rnd() });
+
+  for(let i=0;i<14;i++)
+    S.curtains.push({ th:rnd()*Math.PI*2, w:0.20+rnd()*0.34, h:0.52+rnd()*0.48,
+                      ph:rnd()*6.283, fold:2+Math.floor(rnd()*3), a:0.55+rnd()*0.45 });
+
+  /* the horizon wall: an ice-shelf front in the south, low pack ice in the north */
+  const nSeg = antarctic ? 152 : 196;
+  for(let i=0;i<nSeg;i++){
+    const r = rnd(), r2 = rnd();
+    S.wall.push({
+      t0: i/nSeg*Math.PI*2, t1: (i+1)/nSeg*Math.PI*2,
+      h: antarctic
+        ? (r < 0.10 ? 0.16 + r2*0.22 : 0.55 + r2*0.45)   /* calving embayments break the front */
+        : (r < 0.22 ? 0.02 + r2*0.05 : 0.10 + r2*0.16)   /* leads of open water in the pack */
+    });
+  }
+
+  for(let i=0;i<34;i++)
+    S.bergs.push({ th:rnd()*Math.PI*2, w:0.012+rnd()*0.045, h:0.5+rnd()*1.5,
+                   tabular: antarctic ? rnd() < 0.8 : rnd() < 0.3, far:0.35+rnd()*0.65 });
+
+  if(antarctic)
+    for(let i=0;i<9;i++)
+      S.peaks.push({ th:rnd()*Math.PI*2, w:0.008+rnd()*0.014, h:0.55+rnd()*0.75 });
+
+  for(let i=0;i<(antarctic ? 60 : 110);i++)
+    S.floes.push({ th:rnd()*Math.PI*2, d:Math.pow(rnd(),1.6), w:0.5+rnd()*1.6, ph:rnd()*6.283 });
+
+  S.lampTh = rnd()*Math.PI*2;
+  scene = S;
+}
+
+/* wrap an azimuth into (-PI, PI] relative to the current heading */
+function azOff(th){
+  let d = th - view.yaw;
+  d = ((d + Math.PI) % (Math.PI*2) + Math.PI*2) % (Math.PI*2) - Math.PI;
+  return d;
+}
+
+function drawSky(ctx, W, H, yW, cam, t, padT){
+  const S = scene;
+  if(yW < 26) return;
+  const cx = cam.cx;
+  const HZ = cam.f/Math.max(0.25, Math.cos(view.pitch));
+  const px = phi => cx - HZ*Math.tan(phi);
+  const LIM = 1.24;
+  const sky = Math.max(30, yW);                       /* usable sky depth */
+  const unit = S.antarctic ? clamp(H*0.046, 14, 52) : clamp(H*0.023, 7, 24);
+  const wallH = Math.min(unit, sky*0.46);
+  const guard = Math.min(sky*0.78, padT + 10);        /* the title block keeps its air */
+
+  /* --- stars, then aurora, only during the polar night --- */
+  if(TK.night){
+    for(const s of S.stars){
+      const p = azOff(s.th);
+      if(Math.abs(p) > LIM) continue;
+      const x = px(p);
+      if(x < -8 || x > W+8) continue;
+      const y = yW - guard*0.15 - s.el*(sky - guard*0.2);
+      if(y < 2) continue;
+      const fade = smooth(0, 0.30, (yW - y)/sky) * (1 - Math.abs(p)/LIM*0.55);
+      const tw = 0.62 + 0.38*Math.sin(t*0.0013*s.sp + s.ph);
+      ctx.fillStyle = cssa(TK.star, 0.85*fade*tw);
+      ctx.beginPath(); ctx.arc(x, y, s.r, 0, 6.2832); ctx.fill();
+    }
+
+    ctx.globalCompositeOperation = "lighter";
+    for(const c of S.curtains){
+      const p = azOff(c.th);
+      if(Math.abs(p) > LIM*0.92) continue;
+      const xa = px(p + c.w/2), xb = px(p - c.w/2);
+      if(xb < -W*0.4 || xa > W*1.4) continue;
+      const span = xb - xa;
+      if(span < 10 || span > W*3) continue;
+
+      const hMax = Math.min(c.h*sky, sky - guard);
+      const g2 = ctx.createLinearGradient(0, yW - hMax, 0, yW+3);
+      const a = c.a * 0.34 * (1 - Math.abs(p)/LIM*0.5);
+      g2.addColorStop(0.00, cssa(TK.auroraB, 0));
+      g2.addColorStop(0.26, cssa(TK.auroraB, a*0.30));
+      g2.addColorStop(0.66, cssa(TK.auroraA, a*0.66));
+      g2.addColorStop(0.94, cssa(TK.auroraA, a));
+      g2.addColorStop(1.00, cssa(TK.auroraA, 0));
+      ctx.fillStyle = g2;
+
+      /* a curtain hangs in folds - cusps, not a smooth mound */
+      const N = 64, tops = new Float64Array(N+1);
+      for(let i=0;i<=N;i++){
+        const u = i/N;
+        const cusp = Math.pow(Math.abs(Math.sin(u*Math.PI*c.fold + c.ph + t*0.00012)), 0.9);
+        const fine = 0.86 + 0.14*Math.sin(u*Math.PI*c.fold*3.4 + c.ph*2.1 + t*0.00023);
+        const ends = smooth(0, 0.30, u)*smooth(0, 0.30, 1-u);
+        tops[i] = yW + 3 - hMax*(0.56 + 0.44*cusp)*fine*ends;
+      }
+      ctx.beginPath();
+      ctx.moveTo(xa, yW+3);
+      for(let i=0;i<=N;i++) ctx.lineTo(xa + span*i/N, tops[i]);
+      ctx.lineTo(xb, yW+3);
+      ctx.closePath(); ctx.fill();
+
+      /* brighter rays running down the folds */
+      ctx.globalAlpha = 0.32;
+      for(let i=2;i<N;i+=3){
+        const x = xa + span*i/N;
+        ctx.fillRect(x, tops[i], Math.max(0.8, span/N*0.34), yW + 3 - tops[i]);
+      }
+      ctx.globalAlpha = 1;
+    }
+    ctx.globalCompositeOperation = "source-over";
+  }
+
+  /* --- the low lamp: midnight sun by day, moon through the polar night --- */
+  const lp = azOff(S.lampTh);
+  let lampX = null;
+  if(Math.abs(lp) < LIM){
+    const x = px(lp);
+    if(x > -160 && x < W+160){
+      const y = yW - (TK.night ? sky*0.62 : sky*0.20);
+      const R = TK.night ? clamp(H*0.007, 3.5, 8) : clamp(H*0.011, 5, 13);
+      const halo = TK.night ? R*9 : R*16;
+      const gh = ctx.createRadialGradient(x, y, R*0.6, x, y, halo);
+      gh.addColorStop(0, cssa(TK.lamp, TK.night ? 0.30 : 0.62));
+      gh.addColorStop(0.42, cssa(TK.lamp, TK.night ? 0.07 : 0.20));
+      gh.addColorStop(1, cssa(TK.lamp, 0));
+      ctx.fillStyle = gh;
+      ctx.beginPath(); ctx.arc(x, y, halo, 0, 6.2832); ctx.fill();
+      ctx.fillStyle = cssa(TK.lamp, TK.night ? 0.80 : 0.96);
+      ctx.beginPath(); ctx.arc(x, y, R, 0, 6.2832); ctx.fill();
+      lampX = x;
+    }
+  }
+
+  /* --- horizon haze: distance made visible --- */
+  const hzH = sky*0.34;
+  const hz = ctx.createLinearGradient(0, yW - hzH, 0, yW);
+  hz.addColorStop(0, cssa(TK.haze, 0));
+  hz.addColorStop(1, cssa(TK.haze, TK.night ? 0.38 : 0.78));
+  ctx.fillStyle = hz;
+  ctx.fillRect(0, yW - hzH, W, hzH);
+
+  /* Distant objects keep a steady apparent size: the flat film plane would otherwise
+     stretch anything near the frame edge into a billboard. */
+  const ang = HZ;
+
+  /* --- nunataks: bare rock through the ice sheet, furthest of all --- */
+  for(const k of S.peaks){
+    const p = azOff(k.th);
+    if(Math.abs(p) > LIM*0.8) continue;
+    const x = px(p), w = ang*k.w;
+    if(x < -40 || x > W+40) continue;
+    const h = wallH*k.h;
+    ctx.fillStyle = cssa(mix(TK.rock, TK.haze, 0.55), 0.7);
+    ctx.beginPath();
+    ctx.moveTo(x - w, yW - wallH*0.3);
+    ctx.lineTo(x - w*0.15, yW - wallH*0.3 - h);
+    ctx.lineTo(x + w*0.5, yW - wallH*0.3 - h*0.62);
+    ctx.lineTo(x + w, yW - wallH*0.3);
+    ctx.closePath(); ctx.fill();
+  }
+
+  /* --- the fleet on the horizon --- */
+  for(const b of S.bergs){
+    const p = azOff(b.th);
+    if(Math.abs(p) > LIM*0.85) continue;
+    const x = px(p), w = ang*b.w;
+    if(x < -60 || x > W+60 || w < 1.2) continue;
+    const h = wallH*b.h*0.8;
+    ctx.fillStyle = cssa(mix(TK.shelf, TK.haze, 0.30 + b.far*0.45), 0.9);
+    ctx.beginPath();
+    if(b.tabular){
+      ctx.moveTo(x-w, yW); ctx.lineTo(x-w, yW-h);
+      ctx.lineTo(x+w, yW-h*0.92); ctx.lineTo(x+w, yW);
+    }else{
+      ctx.moveTo(x-w, yW); ctx.lineTo(x-w*0.4, yW-h*0.7);
+      ctx.lineTo(x+w*0.1, yW-h); ctx.lineTo(x+w, yW-h*0.35); ctx.lineTo(x+w, yW);
+    }
+    ctx.closePath(); ctx.fill();
+  }
+
+  /* --- the wall: shelf front or pack ice --- */
+  const segs = [];
+  for(const s of S.wall){
+    const p0 = azOff(s.t0), p1 = azOff(s.t1);
+    if(Math.abs(p0) > LIM || Math.abs(p1) > LIM || p1 < p0) continue;
+    const xa = px(p1), xb = px(p0);
+    if(xb < -20 || xa > W+20) continue;
+    segs.push({ x0:xa, x1:xb, h:wallH*s.h });
+  }
+  if(segs.length){
+    segs.sort((a,b) => a.x0-b.x0);
+    ctx.beginPath();
+    ctx.moveTo(segs[0].x0, yW+2);
+    for(const s of segs){ ctx.lineTo(s.x0, yW-s.h); ctx.lineTo(s.x1, yW-s.h); }
+    ctx.lineTo(segs[segs.length-1].x1, yW+2);
+    ctx.closePath();
+    const gw = ctx.createLinearGradient(0, yW-wallH, 0, yW+2);
+    gw.addColorStop(0, css(mix(TK.shelf, TK.shelfTop, 0.55)));
+    gw.addColorStop(1, css(mix(TK.shelf, TK.haze, 0.25)));
+    ctx.fillStyle = gw; ctx.fill();
+
+    /* the low lamp catches the top edge of the ice */
+    ctx.strokeStyle = cssa(TK.shelfTop, TK.night ? 0.5 : 0.9);
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    for(const s of segs){ ctx.moveTo(s.x0, yW-s.h+0.6); ctx.lineTo(s.x1, yW-s.h+0.6); }
+    ctx.stroke();
+  }
+  return lampX;
+}
+
+/* light on the water, and the ice adrift on it */
+function drawSea(ctx, W, H, yW, cam, t, lampX, bergSpan, gutL, gutR){
+  const S = scene;
+  const cx = cam.cx;
+  const HZ = cam.f/Math.max(0.25, Math.cos(view.pitch));
+  const px = phi => cx - HZ*Math.tan(phi);
+  const deep = H - yW;
+  if(deep < 20) return;
+
+  if(lampX !== null){
+    const reach = deep*(TK.night ? 0.30 : 0.46);
+    const gl = ctx.createLinearGradient(0, yW, 0, yW+reach);
+    gl.addColorStop(0, cssa(TK.lamp, TK.night ? 0.16 : 0.30));
+    gl.addColorStop(1, cssa(TK.lamp, 0));
+    ctx.fillStyle = gl;
+    for(let i=0;i<26;i++){
+      const u = i/25, y = yW + reach*u*u;
+      const spread = 4 + u*u*78;
+      const jig = Math.sin(t*0.0009 + i*1.37)*4 + Math.sin(t*0.0004 + i*0.7)*3;
+      const w = spread*(0.45 + 0.55*Math.abs(Math.sin(i*2.4 + t*0.0006)));
+      ctx.fillRect(lampX - w + jig, y, w*2, Math.max(0.8, 2.4 - u*1.6));
+    }
+  }
+
+  /* floes, thickest near the horizon, thinning as they drift toward the reader */
+  const band = deep*0.16;
+  for(const fl of S.floes){
+    const p = azOff(fl.th);
+    if(Math.abs(p) > 1.1) continue;
+    const spread = 1 + fl.d*1.4;
+    const x = cx + (px(p) - cx)*spread;
+    const y = yW + band*fl.d*fl.d + 1.5;
+    if(x < gutL-6 || x > W-gutR+6) continue;                             /* stay out of the margins */
+    if(bergSpan && x > bergSpan[0]-14 && x < bergSpan[1]+14) continue;   /* never crowd the berg */
+    const w = (1.6 + fl.w*4.2)*(0.5 + fl.d*1.5);
+    const h = Math.max(0.9, w*0.24);
+    const a = (0.30 + fl.d*0.42)*(1 - Math.abs(p)/1.1*0.4);
+    ctx.fillStyle = cssa(mix(TK.shelfTop, TK.haze, 0.2), a);
+    ctx.beginPath(); ctx.ellipse(x, y, w, h, 0, 0, 6.2832); ctx.fill();
+    ctx.fillStyle = cssa(TK.sea2, a*0.5);
+    ctx.beginPath(); ctx.ellipse(x, y+h*0.85, w*0.82, h*0.5, 0, 0, 6.2832); ctx.fill();
+  }
+}
+
+/* ============================================================ 6 | draw */
+let facePolys = [], labelHits = [], textHits = [], tclock = 0, editing = null, cardInset = 0;
+
+function draw(ctx, W, H, exporting){
+  const T = state.tiers, n = T.length;
+  const ramp = RAMPS[state.ramp].rgb;
+  /* the open editor takes a bite out of the plate so the margin labels stay clear */
+  const usable = Math.max(260, W - cardInset);
+  const compact = usable < 620;
+  const gutL = compact ? 48 : (usable < 860 ? 84 : 108);
+  const gutR = (compact ? 16 : (usable < 860 ? 146 : 178)) + cardInset;
+  const padT = compact ? 68 : 92;
+  const padB = compact ? 36 : 46;
+  const box = { x:gutL, y:padT, w:Math.max(80, W-gutL-gutR), h:Math.max(80, H-padT-padB) };
+  const cam = camera(W,H,box);
+
+  const bob = Math.sin(tclock*0.00042)*0.0055;
+  const yWater = cam.axisY(0) + bob*40;
+  const tierColor = i => rampAt(ramp, n>1 ? i/(n-1) : 0);
+  const bgAt = y => y <= yWater
+    ? mix(TK.sky1, TK.sky2, clamp(y/Math.max(1,yWater),0,1))
+    : mix(TK.sea1, TK.sea2, clamp((y-yWater)/Math.max(1,H-yWater),0,1));
+  const fgAt = y => lum(bgAt(y)) > 0.5 ? [10,30,39] : [232,243,245];
+
+  ctx.clearRect(0,0,W,H);
+
+  /* --- sky --- */
+  let g = ctx.createLinearGradient(0,0,0,Math.max(1,yWater));
+  g.addColorStop(0, css(TK.sky1)); g.addColorStop(1, css(TK.sky2));
+  ctx.fillStyle = g; ctx.fillRect(0,0,W,Math.max(0,yWater));
+
+  /* --- the polar horizon --- */
+  const lampX = drawSky(ctx, W, H, yWater, cam, tclock, padT);
+
+  /* --- water column --- */
+  g = ctx.createLinearGradient(0,yWater,0,H);
+  g.addColorStop(0, css(TK.sea1)); g.addColorStop(1, css(TK.sea2));
+  ctx.fillStyle = g; ctx.fillRect(0,yWater,W,Math.max(0,H-yWater));
+
+  /* how wide the berg sits at the surface - floes give it a clear berth */
+  let bergSpan = null;
+  {
+    let lo = Infinity, hi = -Infinity;
+    for(const v of mesh.waterRing){ const p = cam.project(v); if(p){ lo = Math.min(lo,p[0]); hi = Math.max(hi,p[0]); } }
+    if(lo < hi) bergSpan = [lo, hi];
+  }
+  drawSea(ctx, W, H, yWater, cam, tclock, lampX === undefined ? null : lampX, bergSpan, gutL, gutR);
+
+  /* --- depth grid, behind the berg --- */
+  ctx.strokeStyle = TK.grid; ctx.lineWidth = 1;
+  ctx.beginPath();
+  for(const b of mesh.bands){
+    const y = Math.round(cam.axisY(b.y1)) + 0.5;
+    if(y > yWater && y < H){ ctx.moveTo(0,y); ctx.lineTo(W,y); }
+  }
+  ctx.stroke();
+
+  /* --- light shafts --- */
+  const shaftEnd = yWater + (H-yWater)*0.62;
+  g = ctx.createLinearGradient(0,yWater,0,shaftEnd);
+  g.addColorStop(0, TK.shaft); g.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = g;
+  for(let i=0;i<5;i++){
+    const base = W*(0.10 + 0.20*i) + Math.sin(tclock*0.00019 + i*1.7)*26;
+    const w1 = 16 + i*5, w2 = w1*3.4;
+    ctx.beginPath();
+    ctx.moveTo(base-w1, yWater); ctx.lineTo(base+w1, yWater);
+    ctx.lineTo(base+w2+50, shaftEnd); ctx.lineTo(base-w2+50, shaftEnd);
+    ctx.closePath(); ctx.fill();
+  }
+
+  /* --- project + shade faces --- */
+  const L = [-0.34, 0.58, 0.74], LL = Math.hypot(...L);
+  const light = L.map(v => v/LL);
+  const below = [], above = [];
+  const maxDepth = Math.abs(mesh.bottom) || 1;
+  /* measured brightness of each stratum as drawn - decides its text colour */
+  const bSum = new Float64Array(n), bCnt = new Float64Array(n);
+
+  for(const f of mesh.faces){
+    const nc = cam.rot(f.n);
+    if(nc[2] <= 0.001) continue;                       // back-facing
+    const pts = []; let ok = true, dsum = 0;
+    for(const v of f.v){
+      const p = cam.project(v);
+      if(!p){ ok = false; break; }
+      pts.push(p); dsum += p[2];
+    }
+    if(!ok) continue;
+
+    const lam = 0.58 + 0.46*Math.max(0, nc[0]*light[0] + nc[1]*light[1] + nc[2]*light[2]);
+    const rim = Math.pow(1 - clamp(nc[2],0,1), 2.6)*0.26;
+    let c = tierColor(f.tier);
+    if(f.y < 0){
+      /* water swallows light with depth, so tint toward the water at that depth */
+      const df = clamp(-f.y/maxDepth, 0, 1);
+      c = mix(c, mix(TK.sea1, TK.seaDeep, df), df*0.46);
+    }else{
+      c = mix(c, [255,255,255], 0.34);            /* sunlit ice above the line */
+    }
+    const k = clamp(lam + f.jit + (f.tier === selected ? 0.10 : 0), 0, 1.5);
+    c = [ clamp(c[0]*k + rim*180,0,255), clamp(c[1]*k + rim*205,0,255), clamp(c[2]*k + rim*215,0,255) ];
+
+    bSum[f.tier] += lum(c); bCnt[f.tier]++;
+    const rec = { pts, c, tier:f.tier, d:dsum/pts.length };
+    (f.y < 0 ? below : above).push(rec);
+  }
+  const bandLum = i => bCnt[i] ? bSum[i]/bCnt[i] : 0.5;
+  below.sort((a,b) => b.d-a.d);
+  above.sort((a,b) => b.d-a.d);
+
+  const paint = arr => {
+    for(const r of arr){
+      ctx.beginPath();
+      ctx.moveTo(r.pts[0][0], r.pts[0][1]);
+      for(let i=1;i<r.pts.length;i++) ctx.lineTo(r.pts[i][0], r.pts[i][1]);
+      ctx.closePath();
+      const f = css(r.c);
+      ctx.fillStyle = f; ctx.fill();
+      ctx.strokeStyle = f; ctx.lineWidth = 1; ctx.stroke();
+    }
+  };
+
+  paint(below);
+
+  /* --- a veil of water over the submerged mass --- */
+  g = ctx.createLinearGradient(0,yWater,0,H);
+  g.addColorStop(0, cssa(TK.sea1,0.05)); g.addColorStop(1, cssa(TK.sea2,0.34));
+  ctx.fillStyle = g; ctx.fillRect(0,yWater,W,Math.max(0,H-yWater));
+
+  /* --- the waterline --- */
+  const glow = 0.5 + 0.5*Math.sin(tclock*0.0009);
+  ctx.strokeStyle = cssa(fgAt(yWater-1), 0.16);
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0, Math.round(yWater)+0.5); ctx.lineTo(W, Math.round(yWater)+0.5); ctx.stroke();
+
+  const ring = [];
+  for(const v of mesh.waterRing){ const p = cam.project(v); if(p) ring.push(p); }
+  if(ring.length > 2){
+    ctx.beginPath();
+    ctx.moveTo(ring[0][0], ring[0][1]);
+    for(let i=1;i<ring.length;i++) ctx.lineTo(ring[i][0], ring[i][1]);
+    ctx.closePath();
+    ctx.strokeStyle = cssa([255,255,255], 0.30 + 0.16*glow);
+    ctx.lineWidth = 1.6; ctx.stroke();
+  }
+
+  paint(above);
+  facePolys = below.concat(above);
+
+  /* --- entries, set on the berg --- */
+  labelHits = [];
+  for(let i=0;i<n;i++){
+    const b = mesh.bands[i], items = T[i].items;
+    if(!items.length) continue;
+    const yTop = cam.axisY(b.y0), yBot = cam.axisY(b.y1);
+    const bandPx = yBot - yTop;
+    if(bandPx < 13) continue;
+
+    const rowH = bandPx/items.length;
+    const showName = compact && bandPx > 62 && rowH > 26;
+    const fs = clamp(rowH*(showName ? 0.34 : 0.42), 8.5, 21);
+    if(fs < 8.6) continue;
+    /* the on-berg stratum name claims the top of the band; entries start below it */
+    const t0 = showName ? Math.min(0.34, 19/bandPx) : 0;
+
+    const bright = bandLum(i) > 0.54;
+    const fg = bright ? "rgba(8,24,32,.94)" : "rgba(245,251,252,.96)";
+    const halo = bright ? "rgba(255,255,255,.62)" : "rgba(3,14,20,.58)";
+
+    /* the keel narrows fast, so the last stratum keeps its entries in the wide ice */
+    /* in compact mode every band also carries a name, so clear the boundary at both ends */
+    const reach = (i === n-1 ? 0.80 : 1) - (compact ? Math.min(0.18, 15/bandPx) : 0);
+    for(let m=0;m<items.length;m++){
+      const yw = lerp(b.y0, b.y1, t0 + (m+0.5)/items.length*(reach-t0));
+      const rr = mesh.radius((mesh.topH-yw)/mesh.span);
+      const ox = mesh.offX(yw), oz = mesh.offZ(yw);
+      const front = cam.project([ ox + rr*0.55*Math.sin(view.yaw), yw, oz + rr*0.55*Math.cos(view.yaw) ]);
+      const pl = cam.project([ ox + rr*Math.sin(view.yaw - Math.PI/2), yw, oz + rr*Math.cos(view.yaw - Math.PI/2) ]);
+      const pr = cam.project([ ox + rr*Math.sin(view.yaw + Math.PI/2), yw, oz + rr*Math.cos(view.yaw + Math.PI/2) ]);
+      if(!front || !pl || !pr) continue;
+
+      /* entries may run a little past the silhouette, as annotations do */
+      const maxW = Math.max(60, Math.abs(pr[0]-pl[0]) + 30);
+      const cx = (pl[0]+pr[0])/2;
+      const make = s => '500 '+s.toFixed(1)+'px "Iowan Old Style","Charter","Palatino Linotype",Georgia,serif';
+      const txt = fitFont(ctx, items[m], maxW, fs, 8.5, make);
+
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.lineJoin = "round";
+      ctx.strokeStyle = halo; ctx.lineWidth = 3;
+      ctx.strokeText(txt, cx, front[1]);
+      ctx.fillStyle = fg;
+      ctx.fillText(txt, cx, front[1]);
+    }
+
+    if(showName){
+      ctx.font = '600 9.5px "Avenir Next Condensed","Arial Narrow",sans-serif';
+      ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+      ctx.fillStyle = bright ? "rgba(8,24,32,.58)" : "rgba(245,251,252,.62)";
+      tracked(ctx, T[i].name.toUpperCase(), cam.cx, yTop + 11, 1.1, "center");
+    }
+  }
+
+  /* --- left gutter: depth soundings --- */
+  ctx.textBaseline = "middle";
+  for(let i=0;i<n;i++){
+    if(!T[i].depth) continue;
+    const b = mesh.bands[i];
+    const y = (cam.axisY(b.y0) + cam.axisY(b.y1))/2;
+    if(y < padT-14 || y > H-padB+14) continue;
+    const fg = fgAt(y);
+    ctx.textAlign = "right";
+    const raw = compact ? T[i].depth.replace(/\s/g,"") : T[i].depth;
+    const mk = s => s.toFixed(1)+'px ui-monospace,"SF Mono",Menlo,Consolas,monospace';
+    const txt = fitFont(ctx, raw, gutL-26-0.6*raw.length, compact ? 8.5 : 9.5, 6.5, mk);
+    ctx.fillStyle = cssa(fg, i === selected ? 0.95 : 0.74);
+    const w = tracked(ctx, txt, gutL-12, y, 0.6, "right");
+    ctx.strokeStyle = cssa(fg, 0.28);
+    ctx.beginPath(); ctx.moveTo(gutL-8, y); ctx.lineTo(gutL-3, y); ctx.stroke();
+    if(i === selected){
+      ctx.fillStyle = cssa(TK.marker, 0.95);
+      ctx.fillRect(gutL-12-w-9, y-2.5, 5, 5);
+    }
+  }
+
+  /* --- right gutter: stratum names, decluttered --- */
+  if(!compact){
+    const want = [];
+    for(let i=0;i<n;i++){
+      const b = mesh.bands[i];
+      let rx = 0;
+      for(const f of mesh.faces){
+        if(f.tier !== i) continue;
+        for(const v of f.v){ const p = cam.project(v); if(p && p[0] > rx) rx = p[0]; }
+      }
+      want.push({ i, y:(cam.axisY(b.y0)+cam.axisY(b.y1))/2, rx });
+    }
+    const minGap = 34;
+    for(let i=1;i<want.length;i++) want[i].y = Math.max(want[i].y, want[i-1].y + minGap);
+    const overflow = want[want.length-1].y - (H - padB - 6);
+    if(overflow > 0) for(const w of want) w.y -= overflow;
+    for(let i=want.length-2;i>=0;i--) want[i].y = Math.min(want[i].y, want[i+1].y - minGap);
+
+    const lx = W - gutR + 20;
+    for(const w of want){
+      const fg = fgAt(w.y);
+      const sw = tierColor(w.i);
+      ctx.strokeStyle = cssa(fg, w.i === selected ? 0.5 : 0.24);
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(clamp(w.rx+8, box.x, lx-14), w.y);
+      ctx.lineTo(lx-12, w.y); ctx.stroke();
+
+      ctx.fillStyle = css(sw);
+      ctx.fillRect(lx-8, w.y-4, 8, 8);
+      ctx.strokeStyle = cssa(fg, 0.5);
+      ctx.strokeRect(lx-8.5, w.y-4.5, 9, 9);
+
+      ctx.textAlign = "left"; ctx.textBaseline = "middle";
+      ctx.font = '600 12px "Avenir Next Condensed","Arial Narrow",sans-serif';
+      ctx.fillStyle = w.i === selected ? cssa(TK.marker,1) : cssa(fg,0.92);
+      const nameTxt = fitFont(ctx, T[w.i].name.toUpperCase(), gutR-46, 12, 8.5,
+        s => '600 '+s.toFixed(1)+'px "Avenir Next Condensed","Arial Narrow",sans-serif');
+      tracked(ctx, nameTxt, lx+7, w.y-0.5, 0.9, "left");
+
+      labelHits.push({ x:lx-10, y:w.y-11, w:gutR-24, h:22, tier:w.i });
+    }
+  }
+
+  /* --- title block --- */
+  const tfg = fgAt(padT*0.4);
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  ctx.fillStyle = cssa(tfg, 0.55);
+  ctx.font = (compact ? "8.5px " : "9px ") + 'ui-monospace,"SF Mono",Menlo,monospace';
+  tracked(ctx, "SOUNDING CHART", gutL-2, compact ? 24 : 32, 2.2, "left");
+
+  /* The title is typed straight onto the plate, so record where it sits. */
+  const tSize = compact ? 21 : 30;
+  const tY = compact ? 46 : 60, sY = compact ? 62 : 80;
+  const sSize = compact ? 11.5 : 13.5;
+  const tW = W - gutL - gutR*0.5 - 10;
+
+  const titleTxt = fitFont(ctx, (state.title || "Untitled chart").toUpperCase(), tW, tSize, 13,
+    s => '600 '+s.toFixed(1)+'px "Avenir Next Condensed","Arial Narrow",sans-serif');
+  const titleW = trackedW(ctx, titleTxt, tSize*0.045);
+  if(editing !== "title"){
+    ctx.fillStyle = cssa(tfg, 0.96);
+    tracked(ctx, titleTxt, gutL-2, tY, tSize*0.045, "left");
+  }
+
+  const subTxt = fitFont(ctx, state.subtitle || "Add a subtitle", tW, sSize, 9,
+    s => 'italic '+s.toFixed(1)+'px "Iowan Old Style","Charter",Georgia,serif');
+  const subW = ctx.measureText(subTxt).width;
+  if(editing !== "sub"){
+    ctx.fillStyle = cssa(tfg, state.subtitle ? 0.62 : 0.28);
+    ctx.fillText(subTxt, gutL-2, sY);
+  }
+
+  textHits = [
+    { kind:"title", x:gutL-6, y:tY - tSize*0.88, w:Math.max(90, titleW+14), h:tSize*1.24,
+      size:tSize, fg:cssa(tfg,0.96) },
+    { kind:"sub",   x:gutL-6, y:sY - sSize*0.94, w:Math.max(90, subW+14),   h:sSize*1.5,
+      size:sSize, fg:cssa(tfg,0.62) }
+  ];
+
+  /* --- the thesis, bottom left --- */
+  const sub = Math.abs(mesh.bottom)/(mesh.topH + Math.abs(mesh.bottom));
+  const bfg = fgAt(H-padB*0.5);
+  ctx.fillStyle = cssa(bfg, 0.62);
+  ctx.font = (compact ? "8.5px " : "9.5px ") + 'ui-monospace,"SF Mono",Menlo,monospace';
+  tracked(ctx, Math.round(sub*100) + "% SUBMERGED \u00B7 " + n + " STRATA", gutL-2, H-padB+22, 1.6, "left");
+
+  /* --- plate edge --- */
+  if(exporting){
+    ctx.strokeStyle = cssa(fgAt(H/2), 0.14);
+    ctx.lineWidth = 2;
+    ctx.strokeRect(1,1,W-2,H-2);
+  }
+}
+
+/* ============================================================ 7 | canvas plumbing */
+const cvs = document.getElementById("plate");
+const ctx = cvs.getContext("2d");
+let W = 0, H = 0, dirty = true, reduced = matchMedia("(prefers-reduced-motion:reduce)").matches;
+
+function resize(){
+  const r = cvs.parentElement.getBoundingClientRect();
+  const dpr = Math.min(2.5, window.devicePixelRatio || 1);
+  W = Math.max(200, Math.round(r.width));
+  H = Math.max(200, Math.round(r.height));
+  cvs.width = Math.round(W*dpr); cvs.height = Math.round(H*dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  if(typeof endEdit === "function") endEdit();   /* the ghost input would drift out of register */
+  if(typeof layoutInset === "function") layoutInset();
+  dirty = true;
+}
+new ResizeObserver(resize).observe(cvs.parentElement);
+
+function frame(t){
+  if(!reduced){ tclock = t; dirty = true; }
+  if(dirty){ dirty = false; draw(ctx, W, H, false); }
+  requestAnimationFrame(frame);
+}
+const mark = () => { dirty = true; };
+
+/* ---- orbit ---- */
+let drag = null;
+cvs.addEventListener("pointerdown", e => {
+  cvs.setPointerCapture(e.pointerId);
+  drag = { x:e.clientX, y:e.clientY, yaw:view.yaw, pitch:view.pitch, moved:0 };
+});
+cvs.addEventListener("pointermove", e => {
+  if(!drag) return;
+  const dx = e.clientX-drag.x, dy = e.clientY-drag.y;
+  drag.moved = Math.max(drag.moved, Math.hypot(dx,dy));
+  view.yaw = drag.yaw + dx*0.0075;
+  view.pitch = clamp(drag.pitch + dy*0.004, 0, 0.42);
+  mark();
+});
+function endDrag(e){
+  if(drag && drag.moved < 5) pick(e);
+  drag = null;
+}
+cvs.addEventListener("pointerup", endDrag);
+cvs.addEventListener("pointercancel", () => { drag = null; });
+
+cvs.addEventListener("wheel", e => {
+  e.preventDefault();
+  view.zoom = clamp(view.zoom * (e.deltaY > 0 ? 0.93 : 1.075), 0.55, 3);
+  mark();
+}, { passive:false });
+
+cvs.addEventListener("keydown", e => {
+  const k = e.key;
+  if(k === "ArrowLeft")  view.yaw -= 0.09;
+  else if(k === "ArrowRight") view.yaw += 0.09;
+  else if(k === "ArrowUp")    view.pitch = clamp(view.pitch-0.03,0,0.42);
+  else if(k === "ArrowDown")  view.pitch = clamp(view.pitch+0.03,0,0.42);
+  else if(k === "+" || k === "=") view.zoom = clamp(view.zoom*1.1,0.55,3);
+  else if(k === "-" || k === "_") view.zoom = clamp(view.zoom*0.9,0.55,3);
+  else return;
+  e.preventDefault(); mark();
+});
+
+const inRect = (x,y,r) => x >= r.x && x <= r.x+r.w && y >= r.y && y <= r.y+r.h;
+
+function pick(e){
+  const r = cvs.getBoundingClientRect();
+  const x = e.clientX-r.left, y = e.clientY-r.top;
+  hideHint();
+  for(const h of textHits) if(inRect(x,y,h)){ beginEdit(h.kind); return; }
+  if(editing){ endEdit(); return; }
+  for(const l of labelHits) if(inRect(x,y,l)){ select(l.tier); return; }
+  for(let i=facePolys.length-1;i>=0;i--){
+    if(inPoly(x,y,facePolys[i].pts)){ select(facePolys[i].tier); return; }
+  }
+  deselect();
+}
+
+/* what is under the pointer decides how it looks */
+cvs.addEventListener("pointermove", e => {
+  if(drag) return;
+  const r = cvs.getBoundingClientRect();
+  const x = e.clientX-r.left, y = e.clientY-r.top;
+  let c = "grab";
+  if(textHits.some(h => inRect(x,y,h))) c = "text";
+  else if(labelHits.some(l => inRect(x,y,l))) c = "pointer";
+  if(cvs.style.cursor !== c) cvs.style.cursor = c;
+});
+function inPoly(x,y,pts){
+  let inside = false;
+  for(let i=0,j=pts.length-1;i<pts.length;j=i++){
+    const xi = pts[i][0], yi = pts[i][1], xj = pts[j][0], yj = pts[j][1];
+    if((yi > y) !== (yj > y) && x < (xj-xi)*(y-yi)/(yj-yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+
+document.getElementById("zin").onclick  = () => { view.zoom = clamp(view.zoom*1.16,0.55,3); mark(); };
+document.getElementById("zout").onclick = () => { view.zoom = clamp(view.zoom/1.16,0.55,3); mark(); };
+document.getElementById("zres").onclick = () => { view.yaw=-0.46; view.pitch=0.155; view.zoom=1; mark(); };
+
+/* ============================================================ 8 | the interface
+   The chart is the interface: the title is typed onto the plate, and a stratum
+   editor appears only for the stratum you are actually looking at. */
+const el = {
+  hint: document.getElementById("hint"),
+  gTitle: document.getElementById("g-title"),
+  gSub: document.getElementById("g-sub"),
+  card: document.getElementById("card"),
+  cSw: document.getElementById("c-sw"),
+  cName: document.getElementById("c-name"),
+  cDepth: document.getElementById("c-depth"),
+  cEntries: document.getElementById("c-entries"),
+  cUp: document.getElementById("c-up"),
+  cDown: document.getElementById("c-down"),
+  pop: document.getElementById("pop"),
+  opts: document.getElementById("opts"),
+  ramps: document.getElementById("ramps"),
+  poles: document.getElementById("poles"),
+  seed: document.getElementById("seedout"),
+  json: document.getElementById("json"),
+  apply: document.getElementById("apply"),
+  showjson: document.getElementById("showjson"),
+  a11y: document.getElementById("a11y")
+};
+
+function rebuild(){
+  buildMesh();
+  buildScene();
+  mark();
+  save();
+  syncJSON();
+  cvs.setAttribute("aria-label",
+    "Iceberg chart: " + state.title + ". " + state.tiers.length + " strata, from " +
+    state.tiers[0].name + " above the waterline down to " + state.tiers[state.tiers.length-1].name +
+    ". Set against " + (state.scene === "arctic" ? "an Arctic" : "an Antarctic") + " horizon.");
+}
+
+const rampOf = i => css(rampAt(RAMPS[state.ramp].rgb, state.tiers.length > 1 ? i/(state.tiers.length-1) : 0));
+
+/* ---- the stratum card ---- */
+function layoutInset(){
+  const stacked = matchMedia("(max-width:640px)").matches;
+  const open = selected >= 0;
+  const r = el.card.getBoundingClientRect();
+  cardInset = (open && !stacked) ? Math.round(r.width) : 0;
+  const stage = document.querySelector(".stage");
+  stage.style.setProperty("--inset", cardInset + "px");
+  stage.style.setProperty("--vinset", (open && stacked) ? Math.round(r.height) + "px" : "0px");
+}
+
+function select(i){
+  selected = clamp(i, -1, state.tiers.length-1);
+  if(selected < 0){ el.card.classList.remove("open"); layoutInset(); mark(); return; }
+  const t = state.tiers[selected];
+  el.cSw.style.setProperty("--c", rampOf(selected));
+  el.cName.value = t.name;
+  el.cDepth.value = t.depth;
+  el.cUp.disabled = selected === 0;
+  el.cDown.disabled = selected === state.tiers.length-1;
+  drawEntries();
+  el.card.classList.add("open");
+  layoutInset();
+  hideHint();
+  mark();
+}
+function deselect(){ select(-1); }
+
+function drawEntries(){
+  const t = state.tiers[selected];
+  el.cEntries.innerHTML = "";
+  t.items.forEach((s, m) => {
+    const row = document.createElement("div");
+    row.className = "entry-row";
+    const inp = document.createElement("input");
+    inp.className = "i"; inp.value = s; inp.maxLength = 64;
+    inp.setAttribute("aria-label", "Entry " + (m+1));
+    inp.oninput = () => { t.items[m] = inp.value; rebuild(); };
+    inp.onkeydown = e => {
+      if(e.key === "Enter"){ e.preventDefault(); addEntry(m+1); }
+      else if(e.key === "Backspace" && !inp.value && t.items.length > 1){
+        e.preventDefault(); t.items.splice(m,1); rebuild(); drawEntries();
+        const rows = el.cEntries.querySelectorAll("input");
+        if(rows[Math.max(0,m-1)]) rows[Math.max(0,m-1)].focus();
+      }
+    };
+    const rm = document.createElement("button");
+    rm.className = "x"; rm.type = "button"; rm.textContent = "\u2715";
+    rm.setAttribute("aria-label", "Remove entry");
+    rm.onclick = () => { t.items.splice(m,1); rebuild(); drawEntries(); };
+    row.append(inp, rm);
+    el.cEntries.append(row);
+  });
+}
+function addEntry(at){
+  const t = state.tiers[selected];
+  if(t.items.length >= MAX_ITEMS) return toast("Eight entries is the limit");
+  t.items.splice(at === undefined ? t.items.length : at, 0, "");
+  rebuild(); drawEntries();
+  const rows = el.cEntries.querySelectorAll("input");
+  const target = rows[at === undefined ? rows.length-1 : at];
+  if(target) target.focus();
+}
+
+el.cName.oninput  = () => { state.tiers[selected].name = el.cName.value; rebuild(); };
+el.cDepth.oninput = () => { state.tiers[selected].depth = el.cDepth.value; rebuild(); };
+document.getElementById("c-add").onclick = () => addEntry();
+document.getElementById("c-close").onclick = () => { deselect(); cvs.focus(); };
+document.getElementById("c-del").onclick = () => {
+  if(state.tiers.length <= 2) return toast("A chart needs two strata");
+  const i = selected;
+  state.tiers.splice(i,1);
+  rebuild();
+  select(Math.min(i, state.tiers.length-1));
+};
+el.cUp.onclick   = () => move(-1);
+el.cDown.onclick = () => move(1);
+function move(d){
+  const j = selected + d;
+  if(j < 0 || j >= state.tiers.length) return;
+  const [t] = state.tiers.splice(selected,1);
+  state.tiers.splice(j,0,t);
+  rebuild(); select(j);
+}
+
+document.getElementById("add").onclick = () => {
+  if(state.tiers.length >= MAX_TIERS) return toast("Twelve strata is the limit");
+  state.tiers.push({ name:"New stratum", depth:"", items:[""] });
+  rebuild(); select(state.tiers.length-1);
+  el.cName.focus(); el.cName.select();
+};
+
+/* ---- the title, typed onto the plate ---- */
+function beginEdit(kind){
+  const h = textHits.find(x => x.kind === kind);
+  if(!h) return;
+  const inp = kind === "title" ? el.gTitle : el.gSub;
+  editing = kind;
+  inp.hidden = false;
+  inp.style.left = h.x + "px";
+  inp.style.top = h.y + "px";
+  inp.style.width = Math.max(160, h.w) + "px";
+  inp.style.height = h.h + "px";
+  inp.style.fontSize = h.size + "px";
+  inp.style.letterSpacing = (kind === "title" ? h.size*0.045 : 0) + "px";
+  inp.style.color = h.fg;
+  inp.value = kind === "title" ? state.title : state.subtitle;
+  hideHint(); mark();
+  inp.focus(); inp.select();
+}
+function endEdit(){
+  if(!editing) return;
+  editing = null;
+  el.gTitle.hidden = true; el.gSub.hidden = true;
+  mark();
+}
+el.gTitle.oninput = () => { state.title = el.gTitle.value; rebuild(); };
+el.gSub.oninput   = () => { state.subtitle = el.gSub.value; rebuild(); };
+for(const inp of [el.gTitle, el.gSub]){
+  inp.onblur = endEdit;
+  inp.onkeydown = e => { if(e.key === "Enter" || e.key === "Escape"){ e.preventDefault(); inp.blur(); } };
+}
+
+/* ---- options ---- */
+function togglePop(on){
+  const open = on === undefined ? !el.pop.classList.contains("open") : on;
+  el.pop.classList.toggle("open", open);
+  el.opts.setAttribute("aria-expanded", String(open));
+  if(open) hideHint();
+}
+el.opts.onclick = e => { e.stopPropagation(); togglePop(); };
+el.pop.onclick = e => e.stopPropagation();
+document.addEventListener("click", () => togglePop(false));
+document.addEventListener("keydown", e => {
+  if(e.key !== "Escape") return;
+  if(el.pop.classList.contains("open")) togglePop(false);
+  else if(editing) endEdit();
+  else if(selected >= 0){ deselect(); cvs.focus(); }
+});
+
+function renderRamps(){
+  el.ramps.innerHTML = "";
+  for(const key of Object.keys(RAMPS)){
+    const r = RAMPS[key];
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "ramp";
+    b.style.background = "linear-gradient(180deg," + r.stops.join(",") + ")";
+    b.setAttribute("aria-pressed", String(state.ramp === key));
+    b.setAttribute("aria-label", "Depth tint: " + r.label);
+    const s = document.createElement("span"); s.textContent = r.label;
+    b.append(s);
+    b.onclick = () => {
+      state.ramp = key; renderRamps(); rebuild();
+      if(selected >= 0) el.cSw.style.setProperty("--c", rampOf(selected));
+    };
+    el.ramps.append(b);
+  }
+}
+
+const POLES = {
+  antarctic: { name:"Antarctic", note:"An ice-shelf front two hundred metres thick, calving tabular bergs, with rock showing through as nunataks." },
+  arctic:    { name:"Arctic",    note:"No land under this pole \u2014 only sea ice split by leads, and growlers calved off Greenland." }
+};
+function renderPoles(){
+  el.poles.innerHTML = "";
+  for(const key of Object.keys(POLES)){
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "pole";
+    b.textContent = POLES[key].name;
+    b.title = POLES[key].note;
+    b.setAttribute("aria-pressed", String(state.scene === key));
+    b.onclick = () => { state.scene = key; renderPoles(); rebuild(); };
+    el.poles.append(b);
+  }
+}
+
+document.getElementById("reseed").onclick = () => {
+  state.seed = (Math.floor(performance.now()*997) ^ (state.seed*31)) & 0xffff;
+  el.seed.textContent = "SEED " + String(state.seed).padStart(4,"0");
+  rebuild();
+};
+
+/* ---- data ---- */
+function syncJSON(){
+  if(document.activeElement === el.json) return;
+  el.json.value = JSON.stringify(state, null, 2);
+}
+el.showjson.onclick = () => {
+  const on = el.json.hidden;
+  el.json.hidden = !on; el.apply.hidden = !on;
+  el.showjson.setAttribute("aria-expanded", String(on));
+  if(on){ syncJSON(); el.json.focus(); }
+};
+el.apply.onclick = () => {
+  try{
+    state = sanitize(JSON.parse(el.json.value));
+    hydrate();
+    toast("Chart updated");
+  }catch(err){ toast("That isn't valid JSON"); }
+};
+document.getElementById("copy").onclick = async () => {
+  const txt = JSON.stringify(state, null, 2);
+  try{ await navigator.clipboard.writeText(txt); toast("JSON copied"); }
+  catch(e){
+    el.json.hidden = false; el.apply.hidden = false; el.json.select();
+    if(document.execCommand) document.execCommand("copy");
+    toast("JSON selected \u2014 press \u2318C");
+  }
+};
+document.getElementById("dljson").onclick = () => {
+  download(new Blob([JSON.stringify(state,null,2)], {type:"application/json"}), slug()+".json");
+  toast("Downloading .json");
+};
+document.getElementById("reset").onclick = () => {
+  state = structuredClone(EXAMPLE);
+  selected = -1;
+  view.yaw = -0.46; view.pitch = 0.155; view.zoom = 1;
+  hydrate();
+  togglePop(false);
+  toast("Example chart restored");
+};
+document.getElementById("png").onclick = () => {
+  const scale = 2;
+  const off = document.createElement("canvas");
+  off.width = Math.round(W*scale); off.height = Math.round(H*scale);
+  const octx = off.getContext("2d");
+  octx.setTransform(scale,0,0,scale,0,0);
+  const wasEditing = editing; editing = null;
+  draw(octx, W, H, true);
+  editing = wasEditing;
+  off.toBlob(b => { if(b){ download(b, slug()+".png"); toast("Downloading PNG"); } else toast("Export failed"); }, "image/png");
+  mark();
+};
+function slug(){
+  return (state.title || "iceberg").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,48) || "iceberg";
+}
+function download(blob, name){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = name;
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+
+/* ---- toast + hint ---- */
+let tt = null;
+function toast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("on");
+  el.a11y.textContent = msg;
+  clearTimeout(tt);
+  tt = setTimeout(() => t.classList.remove("on"), 2100);
+}
+let hintGone = false;
+function hideHint(){ if(!hintGone){ hintGone = true; el.hint.classList.add("gone"); } }
+
+/* ============================================================ 9 | boot */
+function hydrate(){
+  el.seed.textContent = "SEED " + String(state.seed & 0xffff).padStart(4,"0");
+  renderRamps();
+  renderPoles();
+  rebuild();
+  select(Math.min(selected, state.tiers.length-1));
+}
+
+tokens();
+resize();
+hydrate();
+requestAnimationFrame(frame);
+
+const mq = matchMedia("(prefers-color-scheme: dark)");
+mq.addEventListener("change", () => { tokens(); mark(); });
+matchMedia("(prefers-reduced-motion:reduce)").addEventListener("change", e => { reduced = e.matches; mark(); });
+new MutationObserver(() => { tokens(); mark(); })
+  .observe(document.documentElement, { attributes:true, attributeFilter:["data-theme","style","class"] });
+
+})();
+</script>
+
+</body></html>

@@ -144,9 +144,28 @@ h1, h2, h3, .logo { font-family: "Space Grotesk", sans-serif; line-height: 1.15;
 
 .footer { text-align: center; padding: 2rem 1rem; color: var(--muted); font-size: 0.85rem; border-top: 1px solid rgba(255,255,255,0.06); }
 
+
+/* ===== Proyectos web ===== */
+.projects { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.2rem; }
+.project {
+  display: flex; flex-direction: column;
+  background: var(--card);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: transform 0.2s, border-color 0.2s;
+}
+.project:hover { transform: translateY(-4px); border-color: var(--accent); }
+.project img { aspect-ratio: 16 / 10; width: 100%; object-fit: cover; object-position: top; }
+.project div { padding: 1.1rem 1.2rem 1.3rem; display: flex; flex-direction: column; gap: 0.4rem; flex: 1; }
+.project h3 { font-size: 1.15rem; }
+.project p { color: var(--muted); font-size: 0.95rem; flex: 1; }
+.project span { color: var(--accent); font-size: 0.9rem; }
+
 /* ===== Celular y tableta ===== */
 @media (max-width: 900px) {
   .cards { grid-template-columns: 1fr; }
+  .projects { grid-template-columns: 1fr 1fr; }
   .steps { grid-template-columns: 1fr 1fr; }
   .gallery { grid-template-columns: 1fr 1fr; }
   .gallery figure.wide:last-child { grid-column: auto; }
@@ -158,4 +177,5 @@ h1, h2, h3, .logo { font-family: "Space Grotesk", sans-serif; line-height: 1.15;
   .gallery figure.wide { grid-column: auto; }
   .gallery figcaption { opacity: 1; }
   .steps { grid-template-columns: 1fr; }
+  .projects { grid-template-columns: 1fr; }
 }

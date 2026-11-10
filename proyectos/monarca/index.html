@@ -1,0 +1,374 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Viaje de la Monarca</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: lienzo a pantalla completa (el cielo es el mapa: norte frío arriba, sur cálido abajo), texto flotando en las esquinas */
+:root {
+  --night: #0d1230;
+  --dusk: #2b2152;
+  --ember: #7a3a2a;
+  --monarch: #f08a24;
+  --cream: #f6e7c8;
+  --fir: #3d5c49;
+  --muted: rgba(246, 231, 200, 0.62);
+  --display: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+  --body: "Instrument Sans", system-ui, -apple-system, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body { background: var(--night); color: var(--cream); font-family: var(--body); overflow: hidden; }
+#sky { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+.hud { position: fixed; inset: 0; pointer-events: none; padding: calc(env(safe-area-inset-top, 0px) + 20px) 20px calc(env(safe-area-inset-bottom, 0px) + 18px); display: flex; flex-direction: column; justify-content: space-between; gap: 16px; }
+.top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+.title { max-width: 30rem; }
+.eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--monarch); }
+h1 { font-family: var(--display); font-weight: 400; font-size: clamp(2.2rem, 6vw, 4.2rem); line-height: 0.95; margin: 6px 0 10px; text-wrap: balance; }
+h1 em { color: var(--monarch); }
+#caption { font-size: 15px; line-height: 1.5; color: var(--muted); max-width: 34ch; min-height: 4.5em; transition: opacity .6s; }
+.stats { display: grid; grid-template-columns: auto auto; gap: 6px 18px; font-family: var(--mono); font-size: 12px; font-variant-numeric: tabular-nums; text-align: right; }
+.stats dt { color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; font-size: 10.5px; align-self: center; }
+.stats dd { margin: 0; font-size: 15px; color: var(--cream); }
+.stats dd#month { font-family: var(--display); font-size: 28px; font-style: italic; color: var(--monarch); }
+.bottom { display: flex; align-items: center; gap: 14px; pointer-events: auto; }
+#play { flex: none; width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(246,231,200,.35); background: rgba(13,18,48,.5); color: var(--cream); cursor: pointer; font-size: 14px; display: grid; place-items: center; }
+#play:focus-visible, .months button:focus-visible { outline: 2px solid var(--monarch); outline-offset: 2px; }
+.months { flex: 1; min-width: 0; position: relative; display: grid; grid-template-columns: repeat(12, 1fr); border-top: 1px solid rgba(246,231,200,.25); }
+.months button { background: none; border: 0; color: var(--muted); font-family: var(--mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; padding: 8px 0 2px; cursor: pointer; text-align: left; }
+.months button:hover { color: var(--cream); }
+#needle { position: absolute; top: -4px; width: 2px; height: 8px; background: var(--monarch); border-radius: 1px; box-shadow: 0 0 10px var(--monarch); }
+@media (max-width: 560px) {
+  .stats { text-align: left; }
+  #caption { font-size: 14px; }
+  .months button { font-size: 9px; letter-spacing: 0; }
+}
+</style>
+
+<canvas id="sky" aria-label="Animación de la migración de la mariposa monarca desde Canadá hasta los bosques de oyamel en Michoacán"></canvas>
+
+<div class="hud">
+  <div class="top">
+    <div class="title">
+      <div class="eyebrow">Danaus plexippus · 4 000 km</div>
+      <h1>Viaje de la <em>Monarca</em></h1>
+      <p id="caption"></p>
+    </div>
+    <dl class="stats">
+      <dt>Mes</dt><dd id="month">Agosto</dd>
+      <dt>Latitud</dt><dd id="lat">45.0° N</dd>
+      <dt>Recorrido</dt><dd id="dist">0 km</dd>
+      <dt>Generación</dt><dd id="gen">Matusalén</dd>
+    </dl>
+  </div>
+  <div class="bottom">
+    <button id="play" type="button" aria-label="Pausar">❚❚</button>
+    <div class="months" id="months"><span id="needle"></span></div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const cv = document.getElementById('sky');
+  const ctx = cv.getContext('2d');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Año de la monarca empezando en agosto. Fases como fracción del ciclo.
+  const LOOP = 54;              // segundos por ciclo completo
+  const SOUTH_END = 0.30;       // ago → principios de nov
+  const WINTER_END = 0.58;      // nov → mediados de mar
+  const MONTHS = ['Agosto','Septiembre','Octubre','Noviembre','Diciembre','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio'];
+  const SHORT = ['Ago','Sep','Oct','Nov','Dic','Ene','Feb','Mar','Abr','May','Jun','Jul'];
+
+  // Ruta (coordenadas normalizadas) con su latitud real aproximada
+  const ROUTE = [
+    { x: 0.66, y: 0.10, lat: 45.4, name: 'Ontario' },
+    { x: 0.58, y: 0.22, lat: 42.0, name: 'Grandes Lagos' },
+    { x: 0.50, y: 0.38, lat: 37.5, name: 'Kansas' },
+    { x: 0.45, y: 0.55, lat: 31.0, name: 'Texas' },
+    { x: 0.42, y: 0.70, lat: 25.5, name: 'Coahuila' },
+    { x: 0.38, y: 0.86, lat: 19.6, name: 'Michoacán' },
+  ];
+
+  const CAPTIONS = [
+    [0.00, 'Finales del verano. Nace la generación “Matusalén”: vivirá hasta ocho meses, cuatro veces más que sus padres.'],
+    [0.08, 'Con los días más cortos emprenden el vuelo al sur, planeando en corrientes térmicas hasta 120 km al día.'],
+    [0.18, 'Millones convergen en un embudo sobre Texas, guiadas por el sol y una brújula magnética interna.'],
+    [0.30, 'Llegan a los bosques de oyamel de Michoacán, a 3 000 metros de altitud, cerca del Día de Muertos.'],
+    [0.40, 'Pasan el invierno apiñadas en racimos sobre las ramas de los abetos, aprovechando su calor mutuo.'],
+    [0.58, 'En marzo despiertan, se aparean y vuelan al norte. Las hembras ponen huevos sobre algodoncillo en Texas.'],
+    [0.72, 'Sus hijas y nietas continúan el viaje. Ninguna mariposa completa sola el ciclo: lo terminan sus bisnietas.'],
+    [0.90, 'Tres o cuatro generaciones después, la especie ha vuelto al norte. Y el ciclo vuelve a empezar.'],
+  ];
+
+  let W = 0, H = 0, DPR = 1, S = 1, pts = [], lut = [], total = 0;
+  let year = 0, playing = !reduce, last = performance.now();
+  if (reduce) year = 0.2;
+
+  // ---------- geometría ----------
+  function cr(p0, p1, p2, p3, t) {
+    const t2 = t * t, t3 = t2 * t;
+    return 0.5 * (2 * p1 + (-p0 + p2) * t + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t2 + (-p0 + 3 * p1 - 3 * p2 + p3) * t3);
+  }
+  function rawAt(u) {
+    const n = pts.length - 1, f = Math.min(u * n, n - 1e-6), i = Math.floor(f), t = f - i;
+    const a = pts[Math.max(i - 1, 0)], b = pts[i], c = pts[i + 1], d = pts[Math.min(i + 2, n)];
+    return { x: cr(a.x, b.x, c.x, d.x, t), y: cr(a.y, b.y, c.y, d.y, t) };
+  }
+  function buildLUT() {
+    lut = []; total = 0; let prev = rawAt(0);
+    for (let i = 0; i <= 400; i++) {
+      const p = rawAt(i / 400);
+      total += Math.hypot(p.x - prev.x, p.y - prev.y);
+      lut.push({ ...p, d: total }); prev = p;
+    }
+  }
+  function at(p) { // posición a velocidad uniforme
+    const target = Math.max(0, Math.min(1, p)) * total;
+    let lo = 0, hi = lut.length - 1;
+    while (lo < hi) { const m = (lo + hi) >> 1; lut[m].d < target ? lo = m + 1 : hi = m; }
+    const b = lut[lo], a = lut[Math.max(lo - 1, 0)];
+    const span = b.d - a.d || 1, k = (target - a.d) / span;
+    const x = a.x + (b.x - a.x) * k, y = a.y + (b.y - a.y) * k;
+    const nx = -(b.y - a.y), ny = b.x - a.x, nl = Math.hypot(nx, ny) || 1;
+    return { x, y, nx: nx / nl, ny: ny / nl };
+  }
+  const latToY = lat => pts[0].y + (lat - ROUTE[0].lat) / (ROUTE[5].lat - ROUTE[0].lat) * (pts[5].y - pts[0].y);
+
+  function resize() {
+    DPR = Math.min(devicePixelRatio || 1, 2);
+    W = innerWidth; H = innerHeight;
+    cv.width = W * DPR; cv.height = H * DPR;
+    const mapW = Math.min(W, H * 0.95), ox = (W - mapW) / 2 + (W < 600 ? mapW * 0.08 : 0);
+    S = Math.max(0.65, Math.min(1.4, Math.min(W, H) / 800));
+    pts = ROUTE.map(r => ({ x: ox + r.x * mapW, y: H * (0.06 + r.y * 0.86) }));
+    buildLUT();
+    trees = TREE_SPOTS.map(t => ({ x: pts[5].x + t[0] * S, y: pts[5].y + t[1] * S, h: t[2] * S }));
+  }
+
+  // ---------- población ----------
+  const gauss = () => { let u = 0, v = 0; while (!u) u = Math.random(); v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
+  const TREE_SPOTS = [[-38, 6, 34], [-14, -4, 44], [12, 4, 38], [36, -2, 30], [-26, 22, 26], [24, 20, 28]];
+  let trees = [];
+  const N = Math.round(Math.min(320, Math.max(150, innerWidth * innerHeight / 4200)));
+  const flock = Array.from({ length: N }, (_, i) => {
+    const tree = TREE_SPOTS[i % TREE_SPOTS.length];
+    return {
+      off: gauss() * 0.9, sideJ: Math.random(),
+      delay: Math.random() * 0.38, delay2: Math.random() * 0.3,
+      speed: 0.9 + Math.random() * 0.25,
+      size: 5 + Math.random() * 3.5,
+      flap: 11 + Math.random() * 7, ph: Math.random() * 6.28,
+      wob: 0.6 + Math.random() * 1.4, wobPh: Math.random() * 6.28,
+      cx: tree[0] + gauss() * 7, cy: tree[1] - tree[2] * (0.25 + Math.random() * 0.6),
+      rest: Math.random() * 6.28, hue: Math.random(),
+      x: 0, y: 0, ang: Math.random() * 6.28, vis: 0,
+    };
+  });
+
+  const motes = Array.from({ length: 90 }, () => ({ x: Math.random(), y: Math.random(), r: Math.random() * 1.4 + 0.3, s: Math.random() * 0.02 + 0.004, tw: Math.random() * 6.28 }));
+  const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+  const smooth = (a, b, v) => { const t = clamp((v - a) / (b - a)); return t * t * (3 - 2 * t); };
+  const ease = t => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+  const spreadAt = p => (1 - smooth(0, 0.82, p)) * 2.4 + 0.12; // embudo: ancho al norte, estrecho al sur
+
+  // ---------- dibujo ----------
+  function wing(f) {
+    ctx.save(); ctx.scale(f, 1);
+    ctx.beginPath(); // ala anterior
+    ctx.moveTo(0, -1); ctx.bezierCurveTo(4, -9.5, 11.5, -8.5, 10.5, -3.2); ctx.bezierCurveTo(9.5, 0, 4, 1, 0, 1);
+    ctx.moveTo(0, 1); ctx.bezierCurveTo(6.5, 0.6, 8.6, 5, 6.4, 8.2); ctx.bezierCurveTo(4.2, 10.4, 1, 7.4, 0, 3);
+    ctx.fill(); ctx.stroke();
+    ctx.beginPath(); // venas
+    ctx.moveTo(0.6, -0.4); ctx.lineTo(8.6, -6); ctx.moveTo(0.6, 0); ctx.lineTo(9.5, -2.6);
+    ctx.moveTo(0.6, 1.4); ctx.lineTo(6, 6.5); ctx.moveTo(0.4, 2); ctx.lineTo(3.2, 8);
+    ctx.stroke();
+    ctx.restore();
+  }
+  function butterfly(x, y, ang, size, f, alpha, warm) {
+    ctx.save();
+    ctx.translate(x, y); ctx.rotate(ang); ctx.scale(size / 10, size / 10);
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = warm; ctx.strokeStyle = '#120a06'; ctx.lineWidth = 1.1; ctx.lineJoin = 'round';
+    wing(f); wing(-f);
+    ctx.fillStyle = '#120a06';
+    ctx.beginPath(); ctx.ellipse(0, 0.8, 0.9, 4.6, 0, 0, 6.283); ctx.fill();
+    ctx.restore();
+  }
+  function fir(x, y, h, a) {
+    ctx.save(); ctx.globalAlpha = a; ctx.fillStyle = '#1d3327';
+    for (let i = 0; i < 4; i++) {
+      const ty = y - h * (0.18 + i * 0.22), w = h * (0.34 - i * 0.07);
+      ctx.beginPath(); ctx.moveTo(x, ty - h * 0.28); ctx.lineTo(x + w, ty + h * 0.08); ctx.lineTo(x - w, ty + h * 0.08); ctx.closePath(); ctx.fill();
+    }
+    ctx.fillRect(x - h * 0.03, y - h * 0.2, h * 0.06, h * 0.2);
+    ctx.restore();
+  }
+
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    if (playing) year = (year + dt / LOOP) % 1;
+    const t = now / 1000;
+    const winterT = smooth(SOUTH_END - 0.03, SOUTH_END + 0.06, year) * (1 - smooth(WINTER_END - 0.05, WINTER_END + 0.04, year));
+
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    // cielo: norte frío → sur cálido; se calienta en invierno (llegada al santuario)
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, '#0b1030'); g.addColorStop(0.5, '#25204d');
+    g.addColorStop(0.85, winterT > 0 ? `rgba(${122 + 30 * winterT},${58 + 20 * winterT},${42},1)` : '#7a3a2a');
+    g.addColorStop(1, '#b0562b');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+
+    // partículas de polvo dorado
+    for (const m of motes) {
+      if (playing) m.y -= m.s * dt; if (m.y < 0) m.y = 1;
+      ctx.globalAlpha = 0.25 + 0.25 * Math.sin(t * 1.3 + m.tw);
+      ctx.fillStyle = '#f6e7c8'; ctx.beginPath(); ctx.arc(m.x * W, m.y * H, m.r, 0, 6.283); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // cámara: acercamiento al santuario durante el invierno
+    const z = 1 + 1.9 * ease(winterT);
+    const fx = W / 2 + (pts[5].x - W / 2) * ease(winterT), fy = H / 2 + (pts[5].y - 30 * S - H / 2) * ease(winterT);
+    ctx.translate(W / 2, H / 2); ctx.scale(z, z); ctx.translate(-fx, -fy);
+
+    // paralelos de latitud
+    ctx.font = `${10.5 / z}px "IBM Plex Mono", monospace`; ctx.textBaseline = 'bottom';
+    for (let lat = 45; lat >= 20; lat -= 5) {
+      const y = latToY(lat);
+      ctx.strokeStyle = 'rgba(246,231,200,0.09)'; ctx.lineWidth = 1 / z;
+      ctx.setLineDash([2 / z, 6 / z]); ctx.beginPath(); ctx.moveTo(-W, y); ctx.lineTo(W * 2, y); ctx.stroke();
+      ctx.fillStyle = 'rgba(246,231,200,0.35)'; ctx.fillText(`${lat}°N`, 20, y - 3 / z);
+    }
+    ctx.setLineDash([]);
+
+    // corredor migratorio (embudo)
+    ctx.save();
+    for (let pass = 0; pass < 2; pass++) {
+      ctx.beginPath();
+      for (let i = 0; i <= 80; i++) {
+        const p = i / 80, q = at(p), w = spreadAt(p) * 34 * S * (pass ? 1 : -1);
+        i ? ctx.lineTo(q.x + q.nx * w, q.y + q.ny * w) : ctx.moveTo(q.x + q.nx * w, q.y + q.ny * w);
+      }
+      ctx.strokeStyle = 'rgba(240,138,36,0.10)'; ctx.lineWidth = 1 / z; ctx.stroke();
+    }
+    ctx.beginPath();
+    for (let i = 0; i <= 120; i++) { const q = at(i / 120); i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y); }
+    ctx.strokeStyle = 'rgba(240,138,36,0.35)'; ctx.lineWidth = 1.2 / z;
+    ctx.setLineDash([5 / z, 7 / z]); ctx.lineDashOffset = (year < SOUTH_END ? -1 : 1) * t * 12 / z; ctx.stroke();
+    ctx.restore(); ctx.setLineDash([]);
+
+    // halo del santuario
+    const sx = pts[5].x, sy = pts[5].y;
+    const halo = ctx.createRadialGradient(sx, sy, 0, sx, sy, 120 * S);
+    halo.addColorStop(0, `rgba(255,170,70,${0.28 + 0.25 * winterT})`); halo.addColorStop(1, 'rgba(255,170,70,0)');
+    ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(sx, sy, 120 * S, 0, 6.283); ctx.fill();
+    for (const tr of trees) fir(tr.x, tr.y, tr.h, 0.25 + 0.75 * winterT);
+
+    // nombres de lugares
+    ctx.textBaseline = 'middle';
+    ROUTE.forEach((r, i) => {
+      const p = pts[i], right = i < 3;
+      ctx.fillStyle = 'rgba(246,231,200,0.9)'; ctx.beginPath(); ctx.arc(p.x, p.y, 2.4 / z, 0, 6.283); ctx.fill();
+      ctx.font = `italic ${17 / z}px "Instrument Serif", Georgia, serif`;
+      ctx.textAlign = right ? 'left' : 'right';
+      const dx = (right ? 14 : -14) / z * (i === 5 ? 1 : 1);
+      ctx.fillStyle = 'rgba(246,231,200,0.85)';
+      ctx.fillText(r.name, p.x + dx + (i === 5 ? (-60 * S) : 0), p.y);
+    });
+    if (winterT > 0.4) {
+      ctx.globalAlpha = smooth(0.4, 1, winterT); ctx.textAlign = 'center';
+      ctx.font = `${10 / z * 1.6}px "IBM Plex Mono", monospace`; ctx.fillStyle = '#f6e7c8';
+      ctx.fillText('RESERVA DE LA BIOSFERA · BOSQUE DE OYAMEL · 3 000 m', sx, sy + 46 * S);
+      ctx.globalAlpha = 1;
+    }
+    ctx.textAlign = 'left';
+
+    // mariposas
+    let sumP = 0, leadP = 0, vis = 0;
+    const springQ = clamp((year - WINTER_END) / (1 - WINTER_END));
+    for (const b of flock) {
+      let p, flying = true, cluster = 0, alpha = 1;
+      if (year < SOUTH_END + 0.02) {
+        const local = (year / 0.28) * 1.4 - b.delay;
+        p = ease(clamp(local * b.speed));
+        flying = local > 0 && p < 0.999;
+        cluster = smooth(0.9, 1, p);
+      } else if (year < WINTER_END) {
+        p = 1; cluster = 1;
+        // al mediodía algunas revolotean
+        flying = b.hue < 0.12 + 0.1 * Math.sin(t * 0.7);
+      } else {
+        const q = clamp((springQ * 1.35 - b.delay2) * b.speed);
+        p = 1 - ease(q);
+        cluster = 1 - smooth(0, 0.08, q);
+        flying = q > 0 && q < 0.999;
+        alpha = 0.55 + 0.45 * Math.abs(Math.cos(q * Math.PI * 1.5)); // relevo generacional
+      }
+      const q = at(p), spread = spreadAt(p) * 34 * S * b.off;
+      const wob = flying ? Math.sin(t * b.wob + b.wobPh) * 6 * S : 0;
+      let x = q.x + q.nx * (spread + wob), y = q.y + q.ny * (spread + wob);
+      let cxp = sx + b.cx * S, cyp = sy + b.cy * S;
+      if (flying && cluster > 0.5) { cxp += Math.sin(t * 0.9 + b.wobPh) * 26 * S; cyp += Math.cos(t * 0.7 + b.ph) * 14 * S - 10 * S; }
+      x += (cxp - x) * cluster; y += (cyp - y) * cluster;
+
+      const dx = x - b.x, dy = y - b.y;
+      if (flying && Math.hypot(dx, dy) > 0.05) {
+        const target = Math.atan2(dy, dx) + Math.PI / 2;
+        let d = target - b.ang; d = Math.atan2(Math.sin(d), Math.cos(d));
+        b.ang += d * Math.min(1, dt * 6);
+      }
+      b.x = x; b.y = y;
+      const f = flying ? 0.18 + 0.82 * Math.abs(Math.sin(t * b.flap + b.ph)) : 0.35 + 0.15 * Math.sin(t * 0.8 + b.rest);
+      const warm = b.hue > 0.5 ? '#f08a24' : '#e9761a';
+      butterfly(x, y, flying ? b.ang : b.rest, b.size * S * (cluster > 0.9 ? 0.75 : 1), f, alpha, warm);
+      sumP += p; leadP = Math.max(leadP, p); vis++;
+    }
+
+    // ---------- HUD ----------
+    const avgP = sumP / vis;
+    const mIdx = Math.floor(year * 12) % 12;
+    setText('month', MONTHS[mIdx]);
+    const latNow = ROUTE[0].lat + (ROUTE[5].lat - ROUTE[0].lat) * avgP;
+    setText('lat', latNow.toFixed(1) + '° N');
+    const km = year < WINTER_END ? Math.round(avgP * 4000) : Math.round(4000 + (1 - avgP) * 4000);
+    setText('dist', km.toLocaleString('es-MX') + ' km');
+    let gen = 'Matusalén';
+    if (year >= WINTER_END) gen = springQ < 0.3 ? 'Matusalén' : springQ < 0.55 ? '1.ª de primavera' : springQ < 0.8 ? '2.ª de primavera' : '3.ª de primavera';
+    if (year < 0.03) gen = 'Matusalén (recién nacida)';
+    setText('gen', gen);
+    let cap = CAPTIONS[0][1];
+    for (const c of CAPTIONS) if (year >= c[0]) cap = c[1];
+    setText('caption', cap);
+    needle.style.left = (year * 100) + '%';
+
+    requestAnimationFrame(frame);
+  }
+
+  const cache = {};
+  function setText(id, v) { if (cache[id] !== v) { cache[id] = v; document.getElementById(id).textContent = v; } }
+
+  // controles
+  const needle = document.getElementById('needle');
+  const months = document.getElementById('months');
+  SHORT.forEach((m, i) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = m; b.id = 'm' + i;
+    b.setAttribute('aria-label', 'Ir a ' + MONTHS[i]);
+    b.onclick = () => { year = i / 12 + 0.001; };
+    months.appendChild(b);
+  });
+  const play = document.getElementById('play');
+  function syncPlay() { play.textContent = playing ? '❚❚' : '▶'; play.setAttribute('aria-label', playing ? 'Pausar' : 'Reproducir'); }
+  play.onclick = () => { playing = !playing; syncPlay(); };
+  addEventListener('keydown', e => { if (e.code === 'Space' && e.target === document.body) { e.preventDefault(); play.click(); } });
+  syncPlay();
+
+  addEventListener('resize', resize);
+  resize();
+  requestAnimationFrame(t => { last = t; frame(t); });
+})();
+</script>
+
+</body></html>
