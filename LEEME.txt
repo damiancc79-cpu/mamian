@@ -1,0 +1,12 @@
+WEB MAMIAN - cómo usarla
+
+1. Ya tiene puestos tus renders actuales (safari, Giza, calle toon, Virtue, voxel safari). Para cambiarlos, pon otros en la carpeta img/ con estos nombres (o cambia el src en index.html):
+   - hero.jpg: tu mejor render, horizontal (1600 px de ancho o más). Va de fondo en la portada.
+   - render-01.jpg: render destacado (ocupa dos columnas), mejor horizontal.
+   - render-02.jpg a render-07.jpg: el resto de la galería (render-07 también ocupa dos columnas).
+   Consejo: expórtalos en JPG a calidad 80, de unos 1600 px de ancho, para que la página cargue rápido.
+2. El correo ya está puesto. Cuando tengas perfiles de negocio, agrégalos en la sección de contacto de index.html (hay un ejemplo comentado).
+3. Ajusta los precios de la sección "Páginas web" si quieres.
+4. Los colores se cambian en la parte de arriba de styles.css (:root).
+5. Para publicarla gratis: arrastra la carpeta completa a https://app.netlify.com/drop
+   o súbela a un repositorio de GitHub y activa GitHub Pages.

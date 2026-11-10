@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mamian · Arte 3D y desarrollo web</title>
+  <meta name="description" content="Mamian: renders 3D en Blender y páginas web a medida en HTML y CSS.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- ========== MENÚ ========== -->
+  <header class="nav">
+    <a href="#inicio" class="logo">MAMIAN</a>
+    <nav>
+      <a href="#renders">Renders</a>
+      <a href="#web">Páginas web</a>
+      <a href="#contacto" class="btn btn-small">Contacto</a>
+    </nav>
+  </header>
+
+  <!-- ========== PORTADA ========== -->
+  <!-- Portada: img/hero.jpg (Giza en plastilina). Cámbialo por otro render horizontal si quieres. -->
+  <section id="inicio" class="hero" style="background-image: url('img/hero.jpg');">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <p class="eyebrow">Artista 3D · Desarrollador web</p>
+      <h1>Imágenes 3D y páginas web que hacen que tu marca se vea.</h1>
+      <p class="lead">Renders en Blender para productos, espacios y personajes, y sitios web rápidos en HTML y CSS para negocios y creadores.</p>
+      <div class="hero-buttons">
+        <a href="#renders" class="btn">Ver renders</a>
+        <a href="#web" class="btn btn-ghost">Quiero una página web</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== RENDERS ========== -->
+  <!-- Sustituye cada archivo en img/ por tu render con el mismo nombre, o cambia el src y el texto. -->
+  <section id="renders" class="section">
+    <div class="section-head">
+      <h2>Renders</h2>
+      <p>Una selección de trabajos hechos en Blender.</p>
+    </div>
+    <div class="gallery">
+      <figure class="wide"><img src="img/render-01.jpg" alt="Safari africano · diorama" loading="lazy"><figcaption>Safari africano · diorama</figcaption></figure>
+      <figure><img src="img/render-02.jpg" alt="Virtue · espacio neón abstracto" loading="lazy"><figcaption>Virtue · espacio neón abstracto</figcaption></figure>
+      <figure><img src="img/render-03.jpg" alt="Calle toon · escena de acción" loading="lazy"><figcaption>Calle toon · escena de acción</figcaption></figure>
+      <figure><img src="img/render-04.jpg" alt="Giza en plastilina" loading="lazy"><figcaption>Giza en plastilina</figcaption></figure>
+      <figure><img src="img/render-05.jpg" alt="Safari africano · detalle" loading="lazy"><figcaption>Safari africano · detalle</figcaption></figure>
+      <figure><img src="img/render-06.jpg" alt="Voxel Safari · detalle" loading="lazy"><figcaption>Voxel Safari · detalle</figcaption></figure>
+      <figure class="wide"><img src="img/render-07.jpg" alt="Voxel Safari · expedición" loading="lazy"><figcaption>Voxel Safari · expedición</figcaption></figure>
+    </div>
+  </section>
+
+  <!-- ========== PÁGINAS WEB ========== -->
+  <section id="web" class="section section-alt">
+    <div class="section-head">
+      <h2>Páginas web</h2>
+      <p>Sitios a medida, ligeros y que se ven bien en el celular. Precios de referencia en USD.</p>
+    </div>
+    <div class="cards">
+      <article class="card">
+        <h3>Landing page</h3>
+        <p class="price">desde $80</p>
+        <ul>
+          <li>Una página con tu oferta y botón de contacto</li>
+          <li>Diseño adaptado a celular</li>
+          <li>Entrega en 5 días</li>
+        </ul>
+      </article>
+      <article class="card featured">
+        <span class="badge">Más pedido</span>
+        <h3>Sitio para negocio</h3>
+        <p class="price">desde $200</p>
+        <ul>
+          <li>Hasta 5 secciones: inicio, servicios, galería, ubicación, contacto</li>
+          <li>Botón de WhatsApp y mapa</li>
+          <li>Publicado en tu dominio</li>
+        </ul>
+      </article>
+      <article class="card">
+        <h3>Web con 3D</h3>
+        <p class="price">desde $350</p>
+        <ul>
+          <li>Sitio con renders 3D de tu producto o espacio</li>
+          <li>Imágenes hechas a medida en Blender</li>
+          <li>Ideal para lanzamientos</li>
+        </ul>
+      </article>
+    </div>
+
+    <div class="steps">
+      <div><span>1</span><p>Me cuentas qué necesitas</p></div>
+      <div><span>2</span><p>Te envío una propuesta y un boceto</p></div>
+      <div><span>3</span><p>Construyo y ajustamos juntos</p></div>
+      <div><span>4</span><p>Publicamos tu sitio</p></div>
+    </div>
+  </section>
+
+  <!-- ========== CONTACTO ========== -->
+  <!-- Contacto: correo e Instagram -->
+  <section id="contacto" class="section contact">
+    <h2>¿Hacemos algo juntos?</h2>
+    <p>Escríbeme y te respondo en menos de 24 horas.</p>
+    <a href="mailto:damiancc79@gmail.com" class="btn">damiancc79@gmail.com</a>
+    <div class="socials">
+      <a href="https://www.instagram.com/mamian.mm/" target="_blank" rel="noopener">Instagram @mamian.mm</a>
+      <!-- Agrega aquí más perfiles de negocio cuando los tengas, por ejemplo:
+      <a href="https://www.artstation.com/TU-USUARIO" target="_blank" rel="noopener">ArtStation</a> -->
+    </div>
+  </section>
+
+  <footer class="footer">
+    <p>© 2026 Mamian. Todos los derechos reservados.</p>
+  </footer>
+
+</body>
+</html>
